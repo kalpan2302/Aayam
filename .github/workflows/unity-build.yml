@@ -1,0 +1,154 @@
+name: Unity CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  UNITY_PROJECT_PATH: unity
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Lint & Static Analysis
+  # ─────────────────────────────────────────────
+  lint:
+    name: C# Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Check formatting
+        run: |
+          echo "C# lint/format check placeholder"
+          echo "Add dotnet-format or other linting when solution files are available"
+
+  # ─────────────────────────────────────────────
+  # Unit Tests (Edit Mode)
+  # ─────────────────────────────────────────────
+  test-editmode:
+    name: Edit Mode Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UNITY_PROJECT_PATH }}/Library
+          key: Library-EditMode-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          restore-keys: |
+            Library-EditMode-
+
+      - name: Run Edit Mode Tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          testMode: editmode
+          artifactsPath: test-results
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Edit Mode Test Results
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EditMode-Test-Results
+          path: test-results
+
+  # ─────────────────────────────────────────────
+  # Build Android
+  # ─────────────────────────────────────────────
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [test-editmode]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UNITY_PROJECT_PATH }}/Library
+          key: Library-Android-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          restore-keys: |
+            Library-Android-
+
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          targetPlatform: Android
+          buildName: AayamAR
+          versioning: Semantic
+
+      - name: Upload Android Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-APK
+          path: build/Android/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────
+  # Build iOS (Xcode project export)
+  # ─────────────────────────────────────────────
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    needs: [test-editmode]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UNITY_PROJECT_PATH }}/Library
+          key: Library-iOS-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          restore-keys: |
+            Library-iOS-
+
+      - name: Build iOS Xcode Project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          targetPlatform: iOS
+          buildName: AayamAR
+
+      - name: Upload iOS Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-XcodeProject
+          path: build/iOS/
+          retention-days: 14

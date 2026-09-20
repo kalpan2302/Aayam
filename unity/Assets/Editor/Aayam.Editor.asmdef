@@ -1,0 +1,19 @@
+{
+    "name": "Aayam.Editor",
+    "rootNamespace": "Aayam.Editor",
+    "references": [
+        "Aayam.Core",
+        "Aayam.AR"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

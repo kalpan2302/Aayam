@@ -1,0 +1,17 @@
+{
+    "name": "Aayam.Services",
+    "rootNamespace": "Aayam.Services",
+    "references": [
+        "Aayam.Core",
+        "Aayam.Models"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

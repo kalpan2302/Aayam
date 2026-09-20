@@ -1,0 +1,16 @@
+{
+    "name": "Aayam.Models",
+    "rootNamespace": "Aayam.Models",
+    "references": [
+        "Aayam.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

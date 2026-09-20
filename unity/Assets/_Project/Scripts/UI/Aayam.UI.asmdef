@@ -1,0 +1,18 @@
+{
+    "name": "Aayam.UI",
+    "rootNamespace": "Aayam.UI",
+    "references": [
+        "Aayam.Core",
+        "Aayam.Models",
+        "Aayam.AR"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
