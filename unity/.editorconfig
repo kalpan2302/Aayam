@@ -107,3 +107,4 @@ trim_trailing_whitespace = false
 # Unity YAML
 [*.{unity,prefab,asset,mat,controller,anim}]
 indent_size = 2
+

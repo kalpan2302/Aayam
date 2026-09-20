@@ -54,3 +54,4 @@
 *.controller text eol=lf merge=unityyamlmerge
 *.anim text eol=lf merge=unityyamlmerge
 *.meta text eol=lf
+
