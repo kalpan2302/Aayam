@@ -136,25 +136,15 @@ Unity is chosen over a standard mobile app framework (like React Native or Flutt
 | **3D Technical Artist** | Blender, optimization, texturing, glTF/GLB pipelines. |
 | **UI/UX Designer** | Mobile UI, AR UX patterns, Figma, user research. |
 
-## 14. Timeline & Phase Progress Overview
-- **Phase 0:** Technical & Market Validation — *Planned*
-- **Phase 1: AR Foundation — ✅ COMPLETED** (All 9 steps implemented, tested, and committed)
-  - Step 1: Project Setup & Architecture (`.asmdef`, CI/CD, Bootstrap)
-  - Step 2: AR Session Configuration (`ARSessionController`, permissions, lighting)
-  - Step 3: Plane Detection (`DoorCandidateDetector`, vertical filters, shaders)
-  - Step 4: Object Placement (`PlacementReticle`, surface placer, anchors, undo/redo)
-  - Step 5: Object Interaction (`GestureDetector`, selection, drag, twist, scale locks)
-  - Step 6: 3D Model Loading (`ModelLoader`, LRU `ModelCache`, URP LOD setup)
-  - Step 7: Basic UI (`ScreenManager`, HUD, coaching overlays, product tray)
-  - Step 8: Depth & Occlusion (`AROcclusionManager`, plane fallback, depth placement)
-  - Step 9: Testing & QA (EditMode/PlayMode tests, CI pipeline, profiler)
-- **Phase 2:** Product Pipeline & Backend — *Next Up*
-- **Phase 3:** Door Detection (CV / YOLO) — *Upcoming*
-- **Phase 4:** Door Coordinate System — *Upcoming*
-- **Phase 5:** Measurement Extraction — *Upcoming*
-- **Phase 6:** Realistic Visualization — *Upcoming*
-- **Phase 7:** Deterministic Compatibility Engine — *Upcoming*
-- **Phase 8:** Retailer Dashboard & Pilot Launch — *Upcoming*
+## 14. Timeline Overview (8 Months)
+- **Month 1:** Discovery, Prototyping, and Tech Stack Validation.
+- **Month 2:** Core AR Tracking & Basic Door Detection.
+- **Month 3:** Measurement CV pipeline & Spatial mapping.
+- **Month 4:** 3D Model integration & Unity rendering setup.
+- **Month 5:** Backend setup & Deterministic Compatibility Engine.
+- **Month 6:** Retailer Dashboard & Auth integration.
+- **Month 7:** E2E Integration, UI Polish, and QA testing.
+- **Month 8:** Closed Beta with initial retailers, bug fixing, and MVP launch.
 
 ## 15. QR Code Workflow
 
