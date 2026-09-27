@@ -111,18 +111,18 @@ Dive into our comprehensive documentation:
 - [Phase 7: Compatibility Engine](./docs/phases/phase-7-compatibility-engine.md)
 - [Phase 8: Retailer Dashboard](./docs/phases/phase-8-retailer-dashboard.md)
 
-## ⏱️ Timeline
-
-| Month | Phase Focus | Key Deliverables |
-| :--- | :--- | :--- |
-| **Month 1** | Technical Validation | Feasibility checks, AR prototyping, ML baseline |
-| **Month 2** | AR Foundation | Core AR tracking, simple object placement |
-| **Month 3** | Product Pipeline | 3D asset processing, basic catalog API |
-| **Month 4** | Door Detection | Plane detection, semantic segmentation for doors |
-| **Month 5** | Coordinate System | Door tracking, anchor persistence |
-| **Month 6** | Measurement | Auto-measurement, depth mapping precision |
-| **Month 7** | Visualization | Realistic occlusion, lighting estimation |
-| **Month 8** | Dashboard & Launch | Compatibility rules, retailer portal, MVP release |
+## ⏱️ Timeline & Progress
+ 
+| Month / Phase | Phase Focus | Key Deliverables | Status |
+| :--- | :--- | :--- | :---: |
+| **Month 1 (Phase 0)** | Technical Validation | Feasibility checks, AR prototyping, ML baseline | 📋 Planned |
+| **Month 2 (Phase 1)** | **AR Foundation** | Core AR tracking, plane detection, object placement, interaction, UI, depth/occlusion, tests | ✅ **Completed** |
+| **Month 3 (Phase 2)** | Product Pipeline | 3D asset processing, catalog API, database schema | 🚀 Next |
+| **Month 4 (Phase 3)** | Door Detection | Semantic segmentation for doors, YOLO detection | 📋 Upcoming |
+| **Month 5 (Phase 4)** | Coordinate System | Door tracking, anchor persistence, space mapping | 📋 Upcoming |
+| **Month 6 (Phase 5)** | Measurement | Auto-measurement, depth mapping precision | 📋 Upcoming |
+| **Month 7 (Phase 6)** | Visualization | Realistic occlusion, PBR materials, lighting estimation | 📋 Upcoming |
+| **Month 8 (Phase 7 & 8)**| Dashboard & Launch | Compatibility rules, retailer portal, MVP release | 📋 Upcoming |
 
 ## 👥 Team
 
