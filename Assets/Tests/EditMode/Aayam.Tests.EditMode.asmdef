@@ -1,0 +1,30 @@
+{
+    "name": "Aayam.Tests.EditMode",
+    "rootNamespace": "Aayam.Tests.EditMode",
+    "references": [
+        "Aayam.Core",
+        "Aayam.Models",
+        "Aayam.AR",
+        "Aayam.Utilities",
+        "Aayam.Services",
+        "Aayam.UI",
+        "Unity.TextMeshPro",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
