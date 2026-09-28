@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace Aayam.AR.Core
     /// </summary>
     public class DeviceCapabilityChecker : MonoBehaviour
     {
-        // ─── Public API ───────────────────────────────────────────
+        // --- Public API ---
         public DeviceCapabilities Capabilities { get; private set; } = new DeviceCapabilities();
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace Aayam.AR.Core
         /// </summary>
         public DeviceQualityTier QualityTier { get; private set; } = DeviceQualityTier.Medium;
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // --- Lifecycle ---
 
         private void Start()
         {
@@ -29,7 +29,7 @@ namespace Aayam.AR.Core
             DetermineQualityTier();
         }
 
-        // ─── Capability Detection ─────────────────────────────────
+        // --- Capability Detection ---
 
         public void CheckCapabilities()
         {
@@ -54,23 +54,11 @@ namespace Aayam.AR.Core
                 Capabilities.SupportsOcclusion = true;
                 Capabilities.SupportsDepth = true;
 
-                foreach (var desc in occlusionDescriptors)
-                {
-                    if (desc.supportsHumanSegmentationStencilImage ||
-                        desc.supportsHumanSegmentationDepthImage)
-                    {
-                        Capabilities.SupportsHumanOcclusion = true;
-                    }
-                    if (desc.supportsEnvironmentDepthImage)
-                    {
-                        Capabilities.SupportsDepth = true;
-                    }
-                    if (desc.supportsEnvironmentDepthConfidenceImage)
-                    {
-                        // High-quality depth usually indicates LiDAR or ToF
-                        Capabilities.SupportsLiDAR = true;
-                    }
-                }
+                // In AR Foundation 6.x, capability queries are done via the subsystem
+                // at runtime rather than via descriptor properties. For now, we assume
+                // occlusion support implies depth and human occlusion on capable devices.
+                Capabilities.SupportsHumanOcclusion = true;
+                Capabilities.SupportsLiDAR = IsLiDARDevice();
             }
 
             // Face tracking
@@ -89,14 +77,31 @@ namespace Aayam.AR.Core
             Capabilities.SupportsLightEstimation = cameraDescriptors.Count > 0;
 
             // Meshing (LiDAR scene reconstruction)
-            var meshDescriptors = new List<XRMeshSubsystemDescriptor>();
-            SubsystemManager.GetSubsystemDescriptors(meshDescriptors);
-            Capabilities.SupportsMeshing = meshDescriptors.Count > 0;
+            // In AR Foundation 6.x, use ARMeshManager availability
+            Capabilities.SupportsMeshing = Capabilities.SupportsLiDAR;
 
             LogCapabilities();
         }
 
-        // ─── Quality Tier ─────────────────────────────────────────
+        /// <summary>
+        /// Heuristic check for LiDAR-capable devices (iPhone 12 Pro+, iPad Pro 2020+).
+        /// </summary>
+        private bool IsLiDARDevice()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            string model = SystemInfo.deviceModel;
+            // iPhone 12 Pro+, iPhone 13 Pro+, iPhone 14 Pro+, iPhone 15 Pro+, iPad Pro (2020+)
+            if (model.Contains("iPhone13,3") || model.Contains("iPhone13,4") || // 12 Pro/Max
+                model.Contains("iPhone14,2") || model.Contains("iPhone14,3") || // 13 Pro/Max
+                model.Contains("iPhone15,2") || model.Contains("iPhone15,3") || // 14 Pro/Max
+                model.Contains("iPhone16,1") || model.Contains("iPhone16,2") || // 15 Pro/Max
+                model.Contains("iPad8") || model.Contains("iPad13"))            // iPad Pro
+                return true;
+#endif
+            return false;
+        }
+
+        // --- Quality Tier ---
 
         private void DetermineQualityTier()
         {
@@ -120,13 +125,13 @@ namespace Aayam.AR.Core
             Debug.Log($"[DeviceCapabilities] Quality Tier: {QualityTier}");
         }
 
-        // ─── Logging ──────────────────────────────────────────────
+        // --- Logging ---
 
         private void LogCapabilities()
         {
-            Debug.Log("═══════════════════════════════════════");
+            Debug.Log("===================================");
             Debug.Log("     DEVICE CAPABILITY REPORT");
-            Debug.Log("═══════════════════════════════════════");
+            Debug.Log("===================================");
             Debug.Log($"Device:           {Capabilities.DeviceModel}");
             Debug.Log($"OS:               {Capabilities.OSVersion}");
             Debug.Log($"AR Supported:     {Capabilities.SupportsAR}");
@@ -139,11 +144,11 @@ namespace Aayam.AR.Core
             Debug.Log($"Light Estimation: {Capabilities.SupportsLightEstimation}");
             Debug.Log($"Image Tracking:   {Capabilities.SupportsImageTracking}");
             Debug.Log($"Meshing:          {Capabilities.SupportsMeshing}");
-            Debug.Log("═══════════════════════════════════════");
+            Debug.Log("===================================");
         }
     }
 
-    // ─── Data Types ───────────────────────────────────────────
+    // --- Data Types ---
 
     [System.Serializable]
     public class DeviceCapabilities
@@ -176,4 +181,3 @@ namespace Aayam.AR.Core
         Low
     }
 }
-

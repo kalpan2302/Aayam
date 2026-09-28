@@ -8,7 +8,6 @@
         "Aayam.Utilities",
         "Aayam.Services",
         "Aayam.UI",
-        "Unity.TextMeshPro",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

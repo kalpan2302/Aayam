@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using Aayam.AR.Core;
+using Aayam.Core.Bootstrap;
 
 namespace Aayam.AR.Planes
 {
@@ -16,16 +17,16 @@ namespace Aayam.AR.Planes
         [Header("References")]
         [SerializeField] private ARPlaneManager _planeManager;
 
-        // ─── Events ───────────────────────────────────────────────
+        // â”€â”€â”€ Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         public event Action<ARPlane> OnPlaneDiscovered;
         public event Action<ARPlane> OnPlaneChanged;
         public event Action<ARPlane> OnPlaneLost;
 
-        // ─── State ────────────────────────────────────────────────
+        // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         public int TotalPlaneCount { get; private set; }
         public int VerticalPlaneCount { get; private set; }
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Awake()
         {
@@ -48,7 +49,7 @@ namespace Aayam.AR.Planes
                 _planeManager.planesChanged -= HandlePlanesChanged;
         }
 
-        // ─── Event Handler ────────────────────────────────────────
+        // â”€â”€â”€ Event Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void HandlePlanesChanged(ARPlanesChangedEventArgs args)
         {
@@ -61,7 +62,7 @@ namespace Aayam.AR.Planes
                 AREventBus.RaisePlaneAdded(plane);
 
                 if (AppConfig.Load().VerboseLogging)
-                    Debug.Log($"[Planes] Added: {plane.trackableId} | {plane.alignment} | {plane.extents.x * 2f:F2}×{plane.extents.y * 2f:F2}m");
+                    Debug.Log($"[Planes] Added: {plane.trackableId} | {plane.alignment} | {plane.extents.x * 2f:F2}Ã—{plane.extents.y * 2f:F2}m");
             }
 
             foreach (var plane in args.updated)
@@ -83,7 +84,7 @@ namespace Aayam.AR.Planes
             }
         }
 
-        // ─── Utility ──────────────────────────────────────────────
+        // â”€â”€â”€ Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>Toggle plane detection on/off (saves battery once door is locked).</summary>
         public void SetDetectionEnabled(bool enabled)

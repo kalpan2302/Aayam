@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Aayam.AR.Placement
 {
@@ -7,7 +7,7 @@ namespace Aayam.AR.Placement
     /// </summary>
     public static class PlacementFeedback
     {
-        // ─── Audio ────────────────────────────────────────────────
+        // â”€â”€â”€ Audio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private static AudioSource _audioSource;
         private static AudioClip   _placeClip;
         private static AudioClip   _removeClip;
@@ -22,7 +22,7 @@ namespace Aayam.AR.Placement
             _removeClip  = removeClip;
         }
 
-        // ─── Success (Place) ──────────────────────────────────────
+        // â”€â”€â”€ Success (Place) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>
         /// Plays haptic + audio + triggers scale animation on the newly placed object.
@@ -36,7 +36,7 @@ namespace Aayam.AR.Placement
                 TriggerScaleIn(placedObject);
         }
 
-        // ─── Remove ───────────────────────────────────────────────
+        // â”€â”€â”€ Remove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public static void PlayRemoveFeedback()
         {
@@ -44,14 +44,14 @@ namespace Aayam.AR.Placement
             PlayAudio(_removeClip);
         }
 
-        // ─── Error ────────────────────────────────────────────────
+        // â”€â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public static void PlayErrorFeedback()
         {
             PlayHaptic(HapticType.Heavy);
         }
 
-        // ─── Haptics ──────────────────────────────────────────────
+        // â”€â”€â”€ Haptics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private static void PlayHaptic(HapticType type)
         {
@@ -59,13 +59,13 @@ namespace Aayam.AR.Placement
             switch (type)
             {
                 case HapticType.Light:
-                    UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactLight);
+                    Handheld.Vibrate();
                     break;
                 case HapticType.Medium:
-                    UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactMedium);
+                    Handheld.Vibrate();
                     break;
                 case HapticType.Heavy:
-                    UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactHeavy);
+                    Handheld.Vibrate();
                     break;
             }
 #elif UNITY_ANDROID && !UNITY_EDITOR
@@ -73,7 +73,7 @@ namespace Aayam.AR.Placement
 #endif
         }
 
-        // ─── Audio ────────────────────────────────────────────────
+        // â”€â”€â”€ Audio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private static void PlayAudio(AudioClip clip)
         {
@@ -81,11 +81,11 @@ namespace Aayam.AR.Placement
                 _audioSource.PlayOneShot(clip);
         }
 
-        // ─── Visual Scale-In Animation ────────────────────────────
+        // â”€â”€â”€ Visual Scale-In Animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>
         /// Animates the placed object scaling from 0 to 1 ("pop-in" effect).
-        /// Uses a simple coroutine — no external dependency required.
+        /// Uses a simple coroutine â€” no external dependency required.
         /// </summary>
         private static void TriggerScaleIn(GameObject obj)
         {
@@ -99,7 +99,7 @@ namespace Aayam.AR.Placement
         private enum HapticType { Light, Medium, Heavy }
     }
 
-    // ─── Animation Runner (MonoBehaviour helper) ──────────────
+    // â”€â”€â”€ Animation Runner (MonoBehaviour helper) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Simple MonoBehaviour to run the scale-in animation coroutine on a placed object.

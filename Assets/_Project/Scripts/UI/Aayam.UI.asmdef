@@ -1,11 +1,12 @@
-{
+﻿{
     "name": "Aayam.UI",
     "rootNamespace": "Aayam.UI",
     "references": [
         "Aayam.Core",
         "Aayam.Models",
         "Aayam.AR",
-        "Unity.TextMeshPro"
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -17,3 +18,4 @@
     "versionDefines": [],
     "noEngineReferences": false
 }
+

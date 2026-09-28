@@ -1,4 +1,4 @@
-{
+﻿{
     "name": "Aayam.AR",
     "rootNamespace": "Aayam.AR",
     "references": [
@@ -6,12 +6,11 @@
         "Unity.XR.ARFoundation",
         "Unity.XR.ARSubsystems",
         "Unity.XR.Management",
-        "Unity.InputSystem",
-        "Unity.TextMeshPro"
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
@@ -19,3 +18,4 @@
     "versionDefines": [],
     "noEngineReferences": false
 }
+

@@ -7,7 +7,7 @@ namespace Aayam.Utilities
     public class PerformanceProfiler : MonoBehaviour
     {
         [Header("UI")]
-        [SerializeField] private TMPro.TextMeshProUGUI _displayText;
+        [SerializeField] private UnityEngine.UI.Text _displayText;
 
         [Header("Settings")]
         [SerializeField] private bool  _showOverlay     = true;

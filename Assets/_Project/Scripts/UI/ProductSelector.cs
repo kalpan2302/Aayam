@@ -1,12 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace Aayam.UI
 {
-    // ─── Product Item Data ────────────────────────────────────────
+    // â”€â”€â”€ Product Item Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [Serializable]
     public class ProductUIItem
@@ -14,14 +13,14 @@ namespace Aayam.UI
         public string   ProductId;
         public string   Name;
         public string   Brand;
-        public string   PriceFormatted;    // e.g. "₹1,499"
+        public string   PriceFormatted;    // e.g. "â‚¹1,499"
         public Sprite   Thumbnail;
-        public string   CompatibilityLabel; // "✓ Fits your door" / "Check required"
+        public string   CompatibilityLabel; // "âœ“ Fits your door" / "Check required"
         public Color    CompatibilityColor;
         public GameObject ModelPrefab;     // 3D prefab to place in AR
     }
 
-    // ─── Product Card (per item) ──────────────────────────────────
+    // â”€â”€â”€ Product Card (per item) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Controls a single product card in the horizontal scroll list.
@@ -30,9 +29,9 @@ namespace Aayam.UI
     public class ProductCard : MonoBehaviour
     {
         [SerializeField] private Image           _thumbnail;
-        [SerializeField] private TextMeshProUGUI _nameText;
-        [SerializeField] private TextMeshProUGUI _priceText;
-        [SerializeField] private TextMeshProUGUI _compatText;
+        [SerializeField] private Text   _nameText;
+        [SerializeField] private Text   _priceText;
+        [SerializeField] private Text   _compatText;
         [SerializeField] private Button          _selectButton;
         [SerializeField] private GameObject      _selectedIndicator;
 
@@ -62,7 +61,7 @@ namespace Aayam.UI
         }
     }
 
-    // ─── Product Selector (scroll list) ──────────────────────────
+    // â”€â”€â”€ Product Selector (scroll list) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Horizontal scrollable product tray at the bottom of the AR HUD.
@@ -78,14 +77,14 @@ namespace Aayam.UI
         [Header("AR HUD")]
         [SerializeField] private ARHUDController _hud;
 
-        // ─── Events ───────────────────────────────────────────────
+        // â”€â”€â”€ Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         public event Action<ProductUIItem> OnProductSelected;
 
-        // ─── State ────────────────────────────────────────────────
+        // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private readonly List<ProductCard> _cards = new();
         private ProductUIItem              _selectedItem;
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Start()
         {
@@ -93,7 +92,7 @@ namespace Aayam.UI
             LoadStubProducts();
         }
 
-        // ─── Population ───────────────────────────────────────────
+        // â”€â”€â”€ Population â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>Populate the selector with real product data.</summary>
         public void Populate(List<ProductUIItem> products)
@@ -120,7 +119,7 @@ namespace Aayam.UI
             _selectedItem = null;
         }
 
-        // ─── Selection ────────────────────────────────────────────
+        // â”€â”€â”€ Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void HandleProductSelected(ProductUIItem item)
         {
@@ -146,17 +145,17 @@ namespace Aayam.UI
             Debug.Log($"[ProductSelector] Selected: {item.Name} ({item.ProductId})");
         }
 
-        // ─── Stub Data ────────────────────────────────────────────
+        // â”€â”€â”€ Stub Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void LoadStubProducts()
         {
             var stubs = new List<ProductUIItem>
             {
-                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", PriceFormatted = "₹1,499", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", PriceFormatted = "₹2,299", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   PriceFormatted = "₹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
-                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", PriceFormatted = "₹3,799", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   PriceFormatted = "₹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
+                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", PriceFormatted = "â‚¹1,499", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", PriceFormatted = "â‚¹2,299", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   PriceFormatted = "â‚¹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
+                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", PriceFormatted = "â‚¹3,799", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   PriceFormatted = "â‚¹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
             };
 
             Populate(stubs);

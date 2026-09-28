@@ -1,6 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Aayam.AR.Core;
 using Aayam.AR.Planes;
 using Aayam.AR.Placement;
@@ -20,9 +19,9 @@ namespace Aayam.UI
     /// </summary>
     public class ARHUDController : MonoBehaviour
     {
-        // ─── Inspector ────────────────────────────────────────────
+        // â”€â”€â”€ Inspector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [Header("Status Bar")]
-        [SerializeField] private TextMeshProUGUI _statusText;
+        [SerializeField] private Text _statusText;
         [SerializeField] private Button          _backButton;
         [SerializeField] private Button          _menuButton;
 
@@ -33,7 +32,7 @@ namespace Aayam.UI
         [SerializeField] private Button _screenshotButton;
 
         [Header("Button Labels")]
-        [SerializeField] private TextMeshProUGUI _placeButtonLabel;
+        [SerializeField] private Text _placeButtonLabel;
 
         [Header("Dependencies")]
         [SerializeField] private ScreenManager              _screenManager;
@@ -43,10 +42,10 @@ namespace Aayam.UI
         [SerializeField] private CoachingOverlay            _coaching;
         [SerializeField] private ScreenshotCapture          _screenshot;
 
-        // ─── State ────────────────────────────────────────────────
+        // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private bool _isPlacingMode = false;
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Start()
         {
@@ -65,7 +64,7 @@ namespace Aayam.UI
             AREventBus.OnObjectPlaced        += (p, r) => OnObjectPlaced();
 
             // Initial state
-            UpdateStatus("Initializing AR…");
+            UpdateStatus("Initializing ARâ€¦");
             SetPlaceButtonEnabled(false);
         }
 
@@ -81,16 +80,16 @@ namespace Aayam.UI
             RefreshPlaceButton();
         }
 
-        // ─── AR Event Handlers ────────────────────────────────────
+        // â”€â”€â”€ AR Event Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void OnSessionStateChanged(SessionState state)
         {
             UpdateStatus(state switch
             {
-                SessionState.CheckingAvailability => "Checking AR support…",
-                SessionState.Installing           => "Installing AR services…",
+                SessionState.CheckingAvailability => "Checking AR supportâ€¦",
+                SessionState.Installing           => "Installing AR servicesâ€¦",
                 SessionState.Ready                => "Ready",
-                SessionState.SessionInitializing  => "Starting AR…",
+                SessionState.SessionInitializing  => "Starting ARâ€¦",
                 SessionState.SessionTracking      => "Scan your door",
                 SessionState.Paused               => "AR Paused",
                 SessionState.Error                => "AR Error",
@@ -101,7 +100,7 @@ namespace Aayam.UI
 
         private void OnTrackingLost()
         {
-            UpdateStatus("Tracking lost — move phone slowly");
+            UpdateStatus("Tracking lost â€” move phone slowly");
             SetPlaceButtonEnabled(false);
         }
 
@@ -115,10 +114,10 @@ namespace Aayam.UI
             _isPlacingMode = false;
             UpdateStatus("Product placed!");
             SetPlaceButtonLabel("Add Another");
-            _coaching?.ShowCoaching("Drag to reposition • Twist to rotate", 4f);
+            _coaching?.ShowCoaching("Drag to reposition â€¢ Twist to rotate", 4f);
         }
 
-        // ─── Button Handlers ──────────────────────────────────────
+        // â”€â”€â”€ Button Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void OnBackClicked()
         {
@@ -158,15 +157,15 @@ namespace Aayam.UI
         {
             _placementController?.RemoveAll();
             _sessionController?.ResetSession();
-            UpdateStatus("AR reset — scan your door again");
+            UpdateStatus("AR reset â€” scan your door again");
             SetPlaceButtonLabel("Place");
             _isPlacingMode = false;
         }
 
         private void OnCompareClicked()
         {
-            // Placeholder — Phase 6 (comparison view)
-            Debug.Log("[HUD] Compare clicked — not yet implemented.");
+            // Placeholder â€” Phase 6 (comparison view)
+            Debug.Log("[HUD] Compare clicked â€” not yet implemented.");
         }
 
         private void OnScreenshotClicked()
@@ -174,7 +173,7 @@ namespace Aayam.UI
             _screenshot?.CaptureScreenshot();
         }
 
-        // ─── Helpers ──────────────────────────────────────────────
+        // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public void UpdateStatus(string message)
         {

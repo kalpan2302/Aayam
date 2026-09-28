@@ -1,9 +1,7 @@
 {
     "name": "Aayam.Utilities",
     "rootNamespace": "Aayam.Utilities",
-    "references": [
-        "Unity.TextMeshPro"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -14,3 +12,4 @@
     "versionDefines": [],
     "noEngineReferences": false
 }
+

@@ -1,5 +1,5 @@
-using UnityEngine;
-using TMPro;
+﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Text;
 using UnityEngine.XR.ARFoundation;
 
@@ -14,7 +14,7 @@ namespace Aayam.UI
     {
         [Header("UI References")]
         [SerializeField] private GameObject          _panelRoot;
-        [SerializeField] private TextMeshProUGUI     _debugText;
+        [SerializeField] private Text       _debugText;
 
         [Header("AR References")]
         [SerializeField] private ARSession           _arSession;
@@ -24,12 +24,12 @@ namespace Aayam.UI
         [SerializeField] private float _updateInterval   = 0.2f;
         [SerializeField] private bool  _startVisible     = false;
 
-        // ─── State ────────────────────────────────────────────────
+        // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private float       _deltaTime;
         private float       _nextUpdate;
         private readonly StringBuilder _sb = new StringBuilder(512);
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Awake()
         {
@@ -54,7 +54,7 @@ namespace Aayam.UI
                 RefreshText();
         }
 
-        // ─── Display ──────────────────────────────────────────────
+        // â”€â”€â”€ Display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void RefreshText()
         {
@@ -62,14 +62,14 @@ namespace Aayam.UI
             string fpsColor = fps >= 55f ? "green" : fps >= 30f ? "yellow" : "red";
 
             _sb.Clear();
-            _sb.AppendLine("<b>─ DEBUG PANEL ─</b>");
+            _sb.AppendLine("<b>â”€ DEBUG PANEL â”€</b>");
 
             // Performance
             _sb.AppendLine($"FPS: <color={fpsColor}><b>{fps:F0}</b></color>");
-            _sb.AppendLine($"Δt: {Time.unscaledDeltaTime * 1000f:F1}ms");
+            _sb.AppendLine($"Î”t: {Time.unscaledDeltaTime * 1000f:F1}ms");
 
             // Device
-            _sb.AppendLine($"Screen: {Screen.width}×{Screen.height}");
+            _sb.AppendLine($"Screen: {Screen.width}Ã—{Screen.height}");
             _sb.AppendLine($"DPI: {Screen.dpi:F0}");
             _sb.AppendLine($"RAM: {SystemInfo.systemMemorySize}MB");
             _sb.AppendLine($"GPU: {SystemInfo.graphicsDeviceName}");
@@ -79,7 +79,7 @@ namespace Aayam.UI
             if (_arSession != null)
             {
                 _sb.AppendLine();
-                _sb.AppendLine("<b>── AR ──</b>");
+                _sb.AppendLine("<b>â”€â”€ AR â”€â”€</b>");
                 _sb.AppendLine($"State: {ARSession.state}");
             }
 
@@ -105,7 +105,7 @@ namespace Aayam.UI
                 _debugText.text = _sb.ToString();
         }
 
-        // ─── Public API ───────────────────────────────────────────
+        // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public void TogglePanel()
         {

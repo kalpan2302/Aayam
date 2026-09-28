@@ -1,6 +1,6 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 namespace Aayam.UI
 {
@@ -8,11 +8,11 @@ namespace Aayam.UI
     /// Contextual coaching overlay that guides users through the AR flow.
     ///
     /// States (auto-driven by AR events or called manually):
-    ///   MovePhone      → "Move your phone slowly to scan the area"
-    ///   DoorDetected   → "Door detected! Tap Place to add hardware"
-    ///   SurfaceFound   → "Surface found! Tap to place a product"
-    ///   ProductPlaced  → "Drag to move • Twist to rotate"
-    ///   TrackingLost   → "Point camera at textured surfaces"
+    ///   MovePhone      â†’ "Move your phone slowly to scan the area"
+    ///   DoorDetected   â†’ "Door detected! Tap Place to add hardware"
+    ///   SurfaceFound   â†’ "Surface found! Tap to place a product"
+    ///   ProductPlaced  â†’ "Drag to move â€¢ Twist to rotate"
+    ///   TrackingLost   â†’ "Point camera at textured surfaces"
     ///
     /// Auto-hides after a configurable duration.
     /// </summary>
@@ -20,8 +20,8 @@ namespace Aayam.UI
     {
         [Header("UI References")]
         [SerializeField] private GameObject          _panel;
-        [SerializeField] private TextMeshProUGUI     _messageText;
-        [SerializeField] private UnityEngine.UI.Image _icon;
+        [SerializeField] private Text       _messageText;
+        [SerializeField] private Image      _icon;
 
         [Header("Timing")]
         [SerializeField] private float _defaultDuration  = 3.5f;
@@ -33,11 +33,11 @@ namespace Aayam.UI
         [SerializeField] private Sprite _placeIcon;
         [SerializeField] private Sprite _successIcon;
 
-        // ─── State ────────────────────────────────────────────────
+        // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private Coroutine _hideCoroutine;
         private CanvasGroup _canvasGroup;
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Awake()
         {
@@ -48,7 +48,7 @@ namespace Aayam.UI
             _panel?.SetActive(false);
         }
 
-        // ─── Public API ───────────────────────────────────────────
+        // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>Show a custom coaching message for a given duration.</summary>
         public void ShowCoaching(string message, float duration = -1f, Sprite icon = null)
@@ -70,7 +70,7 @@ namespace Aayam.UI
         {
             if (hasPlacedObjects)
             {
-                ShowCoaching("Drag to move • Pinch to rotate", 5f, _successIcon);
+                ShowCoaching("Drag to move â€¢ Pinch to rotate", 5f, _successIcon);
             }
             else if (hasDoorCandidate)
             {
@@ -93,7 +93,7 @@ namespace Aayam.UI
             _panel?.SetActive(false);
         }
 
-        // ─── Coroutines ───────────────────────────────────────────
+        // â”€â”€â”€ Coroutines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private IEnumerator HideAfterDelay(float delay)
         {

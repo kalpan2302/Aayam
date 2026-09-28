@@ -1,8 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Aayam.AR.Interaction
 {
-    // ─── Interaction State Machine ────────────────────────────────
+    // â”€â”€â”€ Interaction State Machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public enum InteractionState
     {
@@ -31,7 +31,7 @@ namespace Aayam.AR.Interaction
         [SerializeField] private RotationHandler _rotationHandler;
         [SerializeField] private ScaleHandler    _scaleHandler;
 
-        // ─── Transitions ──────────────────────────────────────────
+        // â”€â”€â”€ Transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public void ChangeState(InteractionState newState)
         {
@@ -43,10 +43,10 @@ namespace Aayam.AR.Interaction
             EnterState(CurrentState);
 
             OnStateChanged?.Invoke(previous, CurrentState);
-            Debug.Log($"[Interaction] {previous} → {CurrentState}");
+            Debug.Log($"[Interaction] {previous} â†’ {CurrentState}");
         }
 
-        // ─── Guard Checks ─────────────────────────────────────────
+        // â”€â”€â”€ Guard Checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public bool CanMove()   => CurrentState == InteractionState.Selected;
         public bool CanRotate() => CurrentState == InteractionState.Selected ||
@@ -54,7 +54,7 @@ namespace Aayam.AR.Interaction
         public bool CanScale()  => CurrentState == InteractionState.Selected;
         public bool IsLocked()  => CurrentState == InteractionState.Locked;
 
-        // ─── State Entry/Exit ─────────────────────────────────────
+        // â”€â”€â”€ State Entry/Exit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void EnterState(InteractionState state)
         {
@@ -91,7 +91,7 @@ namespace Aayam.AR.Interaction
         }
     }
 
-    // ─── Lock Controller ──────────────────────────────────────────
+    // â”€â”€â”€ Lock Controller â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Attach to a placed product. Locks it in place so it can't be accidentally moved.
@@ -142,7 +142,7 @@ namespace Aayam.AR.Interaction
         }
     }
 
-    // ─── Snap Controller ──────────────────────────────────────────
+    // â”€â”€â”€ Snap Controller â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Snaps placed objects to standard door hardware heights during drag.
@@ -157,7 +157,7 @@ namespace Aayam.AR.Interaction
         [SerializeField] private float _knockerHeight  = 1.4f;
 
         [Header("Snap Settings")]
-        [SerializeField] private float _snapThresholdM = 0.08f;   // within 80mm → snap
+        [SerializeField] private float _snapThresholdM = 0.08f;   // within 80mm â†’ snap
 
         private bool _lastFrameSnapped;
 
@@ -193,7 +193,7 @@ namespace Aayam.AR.Interaction
         };
     }
 
-    // ─── Haptic Feedback ──────────────────────────────────────────
+    // â”€â”€â”€ Haptic Feedback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Thin cross-platform haptic wrapper.
@@ -205,7 +205,7 @@ namespace Aayam.AR.Interaction
         public static void PlayTap()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactLight);
+            Handheld.Vibrate();
 #elif UNITY_ANDROID && !UNITY_EDITOR
             Handheld.Vibrate();
 #endif
@@ -214,7 +214,7 @@ namespace Aayam.AR.Interaction
         public static void PlaySnap()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactMedium);
+            Handheld.Vibrate();
 #elif UNITY_ANDROID && !UNITY_EDITOR
             Handheld.Vibrate();
 #endif
@@ -223,7 +223,7 @@ namespace Aayam.AR.Interaction
         public static void PlaySuccess()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.Success);
+            Handheld.Vibrate();
 #elif UNITY_ANDROID && !UNITY_EDITOR
             Handheld.Vibrate();
 #endif
@@ -232,7 +232,7 @@ namespace Aayam.AR.Interaction
         public static void PlayError()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            UnityEngine.iOS.Haptic.Play(UnityEngine.iOS.HapticFeedbackType.ImpactHeavy);
+            Handheld.Vibrate();
 #elif UNITY_ANDROID && !UNITY_EDITOR
             Handheld.Vibrate();
 #endif

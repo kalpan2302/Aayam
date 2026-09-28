@@ -1,5 +1,5 @@
-using UnityEngine;
-using TMPro;
+﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Text;
 using UnityEngine.XR.ARFoundation;
 
@@ -13,7 +13,7 @@ namespace Aayam.AR.Planes
     public class PlaneDebugVisualizer : MonoBehaviour
     {
         [Header("UI References")]
-        [SerializeField] private TextMeshProUGUI _debugText;
+        [SerializeField] private Text _debugText;
 
         [Header("System References")]
         [SerializeField] private VerticalPlaneFilter _verticalFilter;
@@ -27,7 +27,7 @@ namespace Aayam.AR.Planes
         private float _nextUpdate;
         private readonly StringBuilder _sb = new StringBuilder(512);
 
-        // ─── Lifecycle ────────────────────────────────────────────
+        // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void Awake()
         {
@@ -45,14 +45,14 @@ namespace Aayam.AR.Planes
             RefreshText();
         }
 
-        // ─── Text Refresh ─────────────────────────────────────────
+        // â”€â”€â”€ Text Refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void RefreshText()
         {
             if (_debugText == null || !_debugText.gameObject.activeInHierarchy) return;
 
             _sb.Clear();
-            _sb.AppendLine("<b>── AR PLANE DEBUG ──</b>");
+            _sb.AppendLine("<b>â”€â”€ AR PLANE DEBUG â”€â”€</b>");
 
             // Overall counts
             int total    = _planeEventHandler != null ? _planeEventHandler.TotalPlaneCount : 0;
@@ -73,13 +73,13 @@ namespace Aayam.AR.Planes
 
                 _sb.AppendLine($"<color=#FFD700><b>Door Candidate</b></color>");
                 _sb.AppendLine($"Score: {score:F0}/100  Confidence: {confidence}");
-                _sb.AppendLine($"Size: {w * 1000:F0}mm × {h * 1000:F0}mm");
+                _sb.AppendLine($"Size: {w * 1000:F0}mm Ã— {h * 1000:F0}mm");
                 _sb.AppendLine($"ID: {plane.trackableId.ToString()[..8]}...");
             }
             else
             {
                 _sb.AppendLine("<color=#FF4444>No door candidate found</color>");
-                _sb.AppendLine("→ Point camera at a door");
+                _sb.AppendLine("â†’ Point camera at a door");
             }
 
             // Per-plane details
@@ -91,14 +91,14 @@ namespace Aayam.AR.Planes
                 {
                     float w = plane.extents.x * 2f;
                     float h = plane.extents.y * 2f;
-                    _sb.AppendLine($"  {plane.trackableId.ToString()[..6]} {w:F2}×{h:F2}m");
+                    _sb.AppendLine($"  {plane.trackableId.ToString()[..6]} {w:F2}Ã—{h:F2}m");
                 }
             }
 
             _debugText.text = _sb.ToString();
         }
 
-        // ─── Public API ───────────────────────────────────────────
+        // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         /// <summary>Toggle visibility of the debug panel.</summary>
         public void Toggle()
