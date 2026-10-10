@@ -1,6 +1,11 @@
 """
-Import all models so Alembic can auto-detect them.
+Model package - re-exports all ORM classes for convenient imports.
+
+Usage:
+    from app.models import Product, Brand, Category
 """
+from app.database import Base  # noqa: F401 - needed by Alembic env.py
+
 from app.models.product import (
     Brand,
     Category,
@@ -15,9 +20,9 @@ from app.models.product import (
     Tag,
     ProductTag,
 )
-from app.models.audit import AuditLog
 
 __all__ = [
+    "Base",
     "Brand",
     "Category",
     "Product",
@@ -30,5 +35,4 @@ __all__ = [
     "ProductAttribute",
     "Tag",
     "ProductTag",
-    "AuditLog",
 ]
