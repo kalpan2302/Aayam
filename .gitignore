@@ -77,6 +77,16 @@ backend/.env
 backend/venv/
 backend/*.pyc
 
+# Locally-served product assets (3D models, images) - binary content, not source.
+# Folder structure is preserved via .gitkeep; real assets live here but aren't committed.
+backend/storage/**/*.glb
+backend/storage/**/*.gltf
+backend/storage/**/*.png
+backend/storage/**/*.jpg
+backend/storage/**/*.jpeg
+backend/storage/**/*.webp
+backend/storage/**/*.ktx2
+
 # Dashboard
 dashboard/node_modules/
 dashboard/.next/

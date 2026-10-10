@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     AWS_S3_BUCKET: str = "aayam-assets-dev"
     AWS_REGION: str = "ap-south-1"
     CLOUDFRONT_DOMAIN: str = ""
+    # Dev-only local asset serving - no cloud account needed. Served at /static,
+    # swap for AWS_S3_BUCKET/CLOUDFRONT_DOMAIN later without changing callers,
+    # since model_url/thumbnail_url are stored as paths, not full domains.
+    LOCAL_STORAGE_DIR: str = "storage"
     API_KEY: str = "dev-api-key-change-me"
     ADMIN_API_KEY: str = "dev-admin-key-change-me"
     ENVIRONMENT: str = "development"
