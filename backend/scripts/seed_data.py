@@ -128,15 +128,15 @@ async def seed_data():
                 cat_path = cat_slug.replace("-", "_")
                 session.add(Product3DAsset(
                     product_id=product.id,
-                    model_url=f"https://cdn.aayam.app/models/{cat_path}/{sku}.glb",
+                    model_url=f"/static/models/{cat_path}/{sku}.glb",
                     model_format="glb", file_size_bytes=1024000, polygon_count=5000,
-                    thumbnail_url=f"https://cdn.aayam.app/thumbnails/{sku}.png",
+                    thumbnail_url=f"/static/thumbnails/{sku}.png",
                     anchor_x_mm=Decimal("0"), anchor_y_mm=Decimal(str(anchor_y)),
                     anchor_z_mm=Decimal("0"), lod_level=0,
                 ))
                 session.add(ProductImage(
                     product_id=product.id,
-                    image_url=f"https://cdn.aayam.app/images/{sku}.jpg",
+                    image_url=f"/static/images/{sku}.jpg",
                     alt_text=name, display_order=0, is_primary=True,
                 ))
                 session.add(ProductMaterial(
