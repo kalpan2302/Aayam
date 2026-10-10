@@ -52,7 +52,6 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: EditMode Test Results
           cliVersion: v0.1.72
-          coverageEnabled: false
 
       - name: Upload EditMode Results
         uses: actions/upload-artifact@v4
@@ -98,7 +97,6 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: PlayMode Test Results
           cliVersion: v0.1.72
-          coverageEnabled: false
 
       - name: Upload PlayMode Results
         uses: actions/upload-artifact@v4
