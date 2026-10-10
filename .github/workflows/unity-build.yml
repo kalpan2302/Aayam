@@ -7,7 +7,7 @@ on:
     branches: [main, dev]
 
 env:
-  UNITY_PROJECT_PATH: unity
+  UNITY_PROJECT_PATH: .
 
 jobs:
   # ─────────────────────────────────────────────
@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.UNITY_PROJECT_PATH }}/Library
-          key: Library-EditMode-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          key: Library-EditMode-${{ hashFiles('Assets/**', 'Packages/**') }}
           restore-keys: |
             Library-EditMode-
 
@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.UNITY_PROJECT_PATH }}/Library
-          key: Library-Android-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**') }}
           restore-keys: |
             Library-Android-
 
@@ -131,7 +131,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.UNITY_PROJECT_PATH }}/Library
-          key: Library-iOS-${{ hashFiles('unity/Assets/**', 'unity/Packages/**') }}
+          key: Library-iOS-${{ hashFiles('Assets/**', 'Packages/**') }}
           restore-keys: |
             Library-iOS-
 

@@ -24,8 +24,8 @@ jobs:
       - name: Cache Library
         uses: actions/cache@v4
         with:
-          path: unity/Library
-          key: Library-EditMode-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**') }}
+          path: Library
+          key: Library-EditMode-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-EditMode-
             Library-
@@ -33,7 +33,7 @@ jobs:
       - name: Run EditMode Tests
         uses: game-ci/unity-test-runner@v4
         with:
-          projectPath: unity
+          projectPath: .
           testMode: editmode
           artifactsPath: artifacts/editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -59,8 +59,8 @@ jobs:
       - name: Cache Library
         uses: actions/cache@v4
         with:
-          path: unity/Library
-          key: Library-PlayMode-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**') }}
+          path: Library
+          key: Library-PlayMode-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-PlayMode-
             Library-
@@ -68,7 +68,7 @@ jobs:
       - name: Run PlayMode Tests
         uses: game-ci/unity-test-runner@v4
         with:
-          projectPath: unity
+          projectPath: .
           testMode: playmode
           artifactsPath: artifacts/playmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
