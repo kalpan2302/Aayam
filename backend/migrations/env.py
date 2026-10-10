@@ -20,9 +20,10 @@ if config.config_file_name is not None:
 
 # Import Base model and configuration settings
 try:
-    from app.config import settings
+    from app.config import get_settings
     from app.models import Base
 
+    settings = get_settings()
     target_metadata = Base.metadata
 except ImportError:
     settings = None
