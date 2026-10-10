@@ -15,9 +15,16 @@ namespace Aayam.Core.Bootstrap
         public string BundleId => Application.identifier;
 
         // ─── API Configuration ────────────────────────────────────────
+        // Dev default: the backend runs locally and serves both the API and
+        // static assets (see backend/app/main.py's /static mount) from the
+        // same host - no AWS/CDN account needed yet (Phase 2 Step 3).
+        // Port 8010, not 8000 - this machine runs another, unrelated Docker
+        // container on 8000. On a physical device, "localhost" means the
+        // device itself, not your laptop - use your laptop's LAN IP (e.g.
+        // "http://192.168.1.23:8010") or a tunnel instead.
         [Header("API")]
-        public string ApiBaseUrl = "https://api.aayam.app/v1";
-        public string CdnBaseUrl = "https://cdn.aayam.app";
+        public string ApiBaseUrl = "http://localhost:8010";
+        public string CdnBaseUrl = "http://localhost:8010";
         public float ApiTimeout = 30f;
 
         // ─── AR Configuration ─────────────────────────────────────────

@@ -22,9 +22,11 @@ docker compose up --build
 ```
 
 The services will start with health checks:
-- **FastAPI API Server**: [http://localhost:8000](http://localhost:8000)
-- **PostgreSQL Database**: `localhost:5432` (`aayam` database)
+- **FastAPI API Server**: [http://localhost:8010](http://localhost:8010)
+- **PostgreSQL Database**: `localhost:5434` (`aayam` database)
 - **Redis Cache**: `localhost:6379`
+
+(Ports 8010/5434, not the defaults 8000/5432 - this machine runs other, unrelated Docker containers on those.)
 
 ---
 
@@ -68,7 +70,7 @@ alembic upgrade head
 
 ### 6. Run the Development Server
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8010 --reload
 ```
 
 ---
@@ -76,9 +78,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ## 📖 API Documentation
 
 Once the server is running, interactive API documentation is available at:
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Swagger UI**: [http://localhost:8010/docs](http://localhost:8010/docs)
+- **ReDoc**: [http://localhost:8010/redoc](http://localhost:8010/redoc)
+- **Health Check**: [http://localhost:8010/health](http://localhost:8010/health)
 
 ---
 
@@ -106,7 +108,7 @@ mypy app
 
 | Variable | Description | Example / Default | Required |
 | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | Async PostgreSQL connection string | `postgresql+asyncpg://aayam:aayam_dev_123@localhost:5432/aayam` | Yes |
+| `DATABASE_URL` | Async PostgreSQL connection string | `postgresql+asyncpg://aayam:aayam_dev_123@localhost:5434/aayam` | Yes |
 | `REDIS_URL` | Redis cache and session store URL | `redis://localhost:6379/0` | Yes |
 | `AWS_S3_BUCKET` | S3 bucket storing 3D GLB models & thumbnails | `aayam-assets-dev` | Yes |
 | `AWS_REGION` | AWS Region for S3 / CloudFront | `ap-south-1` | Yes |

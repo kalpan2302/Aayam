@@ -12,6 +12,12 @@ This phase creates the core product data system and 3D asset pipeline for Aayam.
 
 ## Step 1: Database Schema Design (Week 1)
 
+**Status: ✅ Done (2026-10-10).** Actual implementation exceeds this sketch —
+see `backend/migrations/versions/001-003` for the real schema (12 tables, named
+FKs, CHECK constraints, GIN/trigram/partial/covering indexes, 7 triggers,
+partitioned audit log, views + materialized view). This section's SQL is
+historical/illustrative, not what's deployed.
+
 ### Product Data Model Example (JSON)
 ```json
 {
@@ -154,6 +160,16 @@ VALUES (1, 's3://aayam-assets/models/HANDLE_001.glb', 's3://aayam-assets/thumbna
 
 ## Step 2: 3D Asset Pipeline (Weeks 1-2)
 
+**Status: 🔶 1/20 done (verified 2026-10-11).** `HANDLE_001` has a real
+Blender-authored GLB (`backend/storage/models/lever_handle/HANDLE_001.glb`,
+~2.0MB) swapped in — but its pivot sits at the mesh's geometric center, not
+the real mounting point, so it needs either a re-export with the origin at
+the anchor or a runtime offset fix before it places correctly. The other 19
+products (`backend/storage/models/*/*.glb`, ~1.7KB each) are temporary
+placeholder boxes sized to each product's real dimensions
+(`backend/scripts/generate_placeholder_models.py`), not real art — sourcing
+real models for them hasn't started.
+
 ### Blender Workflow
 1. **Source:** Obtain CAD files or reference photos.
 2. **Modeling:** Create geometry in Blender, matching exact physical dimensions.
@@ -176,6 +192,15 @@ VALUES (1, 's3://aayam-assets/models/HANDLE_001.glb', 's3://aayam-assets/thumbna
 ---
 
 ## Step 3: AWS S3 Setup (Week 1)
+
+**Status: ✅ Done (2026-10-10) — via local static file serving, not AWS.** To
+avoid any cloud billing during dev, assets are served from the backend itself
+instead: `backend/storage/{models,thumbnails,images,textures}/` mounted at
+`/static` (see `app/storage.py`, `app/main.py`). `model_url`/`thumbnail_url`
+are stored as relative paths (`/static/...`), so migrating to real S3 +
+CloudFront later is a URL-prefix change, not a rewrite. Revisit this section
+(the actual S3/CloudFront plan below) before a retail pilot needs assets
+reachable from outside your own network.
 
 ### S3 Bucket Structure
 ```text
@@ -211,6 +236,15 @@ def upload_model(file_path, category, filename):
 ---
 
 ## Step 4: Backend API (Week 2)
+
+**Status: ✅ Done (2026-10-10).** `app/api/v1/{products,brands,categories}.py`
+wired to the real DB (list/filter/sort/paginate, get by id/sku, create/update/
+soft-delete, all tested — see `backend/tests/`). `app/api/v1/assets.py`'s
+upload endpoint now writes to local storage (Step 3) with extension/path-
+traversal validation. The endpoint list below is illustrative, not literal —
+`/3d-asset` and `/compatibility` aren't separate routes; that data is nested
+in `GET /products/{id}` instead (fewer round trips). `/qr` was a stub when
+this was first written — it's done now, see Step 6.
 
 ### FastAPI Setup
 ```python
@@ -253,6 +287,15 @@ def get_product(product_id: int):
 
 ## Step 5: Product Catalogue in App (Week 3)
 
+**Status: ✅ Verified working (2026-10-10).** Played through the full
+catalogue flow against the real backend/DB — list loads, thumbnails render,
+tap-to-select works. Found and fixed a real bug along the way: `ProductCard`
+was a second class living inside `ProductSelector.cs`, so Unity never
+generated a MonoScript asset for it and the prefab baked `m_Script: {fileID:
+0}` ("missing script"), silently breaking every card. Fixed by moving it to
+its own `Assets/_Project/Scripts/UI/ProductCard.cs` and repointing the
+prefab's `m_Script` GUID at the new asset.
+
 ### Unity Implementation
 - **Data Loading:** Use Unity WebRequests to fetch JSON from `GET /api/v1/products`.
 - **Model Downloading:** Implement async downloading of GLB files using `UnityWebRequest` and GLTFUtility/Siccity.
@@ -262,6 +305,20 @@ def get_product(product_id: int):
 ---
 
 ## Step 6: QR Code System (Weeks 3-4)
+
+**Status: 🔶 Generation done & verified; scanning code correct but not yet
+device-verified (2026-10-10/11).** `GET /api/v1/assets/{id}/qr` generates real
+`aayam://product/{sku}` QR PNGs — ran it for all 20 real products, confirmed
+20 files on disk at `backend/storage/qrcodes/*.png`. `QRScanner.cs`'s decode
+pipeline (camera frame → `TryAcquireLatestCpuImage` → ZXing →
+`DeepLinkParser`) was proven bug-free via temporary diagnostic logging: every
+frame, CPU image acquisition and ZXing decode both ran with zero errors — the
+only reason decode kept returning null in testing is that XR Simulation's
+camera capture only sees the baked Simulation Environment geometry, not an
+ad-hoc QR texture placed in the scene. That's a testing-environment dead end,
+not an app bug (see memory `xr-simulation-qr-scan-testing`). Still needs a
+real on-device ARKit test with an actual printed/displayed QR code as the
+real verification — that hasn't happened yet.
 
 - **QR Generation:** Generate unique QR codes representing deep links (e.g., `aayam://product/GDJ-MBH-001`).
 - **Unity Scanning:** Integrate a QR code scanning library (e.g., ZXing) in the Unity app.
@@ -284,6 +341,20 @@ def generate_product_qr(product_id, output_path):
 
 ## Step 7: Anchor Point System (Week 3)
 
+**Status: 🔶 Height-snap math verified, live tap-to-place trigger not yet
+verified (2026-10-10/11).** `DoorSurfacePlacer.SnapToStandardHeight()` (floor
+Y + `anchor_y_mm` → final world Y) was checked directly against 3 cases, all
+correct. The live flow — aim the reticle at a vertical plane within 4m
+(`PlacementReticle._maxDistance`, `_verticalOnly`), tap, `ObjectPlacement
+Controller.ExecutePlacement()` fires, snapped to height if
+`FloorPlaneDetector.HasFloor` — has **not** been exercised end-to-end live.
+Two automated attempts (script-driven Play mode, no real mouse/keyboard)
+both hit a Unity Editor bug where `Time.frameCount` stays frozen solid
+whenever the Editor window lacks real OS focus, even with `isPlaying=true` —
+this only resolves with a human actually driving Play mode. Manual test
+steps are written up and waiting on Kalpan to run them and report the
+console output.
+
 Products must be anchored correctly on the detected door plane. Standard mounting heights:
 - **Handle:** ~1000mm from floor.
 - **Lock:** ~1000mm from floor.
@@ -295,6 +366,16 @@ Products must be anchored correctly on the detected door plane. Standard mountin
 ---
 
 ## Step 8: Create Initial 20 Products
+
+**Status: ✅ Done — the 2026-10-10 caveat below was wrong, corrected
+2026-10-11.** Original note claimed this only ran against a throwaway test DB,
+blocked on a port-5432 conflict. Verified directly against the actual running
+system instead: `aayam_db` (docker container, mapped to host port **5434**,
+not 5432 — so there was never a real conflict) is up and healthy, and holds
+exactly 20 `products` rows / 20 `product_3d_assets` rows, matching the 10
+handles / 5 locks / 5 accessories mix. This **is** the real persistent dev DB.
+Also found and deleted one leftover test row (`LIFECYCLE_78D6948C`) that had
+been written into this same real DB during earlier ad-hoc testing.
 
 **Sourcing:** Gather real specs/prices from Indian hardware brands (Godrej, Yale, Dorset).
 
@@ -308,11 +389,14 @@ Products must be anchored correctly on the detected door plane. Standard mountin
 ---
 
 ## Deliverables
-- [ ] PostgreSQL schema deployed
-- [ ] 20 product records with full metadata
-- [ ] 20 3D models (glTF/GLB) in S3
-- [ ] FastAPI backend with product endpoints
-- [ ] Product catalogue UI in app
-- [ ] QR code system working
-- [ ] Anchor point system defined
-- [ ] API documentation
+
+Status as of 2026-10-11 — see per-step notes above for detail/caveats.
+
+- [x] PostgreSQL schema deployed — confirmed live on the real dev DB (`aayam_db`, port 5434), not a throwaway one
+- [x] 20 product records with full metadata — confirmed, 20 rows in `products` + `product_3d_assets`
+- [ ] 20 3D models (glTF/GLB) — only 1/20 is real art (`HANDLE_001`, pivot still wrong); other 19 are placeholder boxes
+- [x] FastAPI backend with product endpoints — including QR generation (Step 6), verified for all 20 products
+- [x] Product catalogue UI in app — played through end-to-end against the real backend; one real bug found and fixed (`ProductCard` missing-script)
+- [~] QR code system — generation done & verified; scanning code proven correct in isolation but not yet verified on a real device (XR Simulation can't synthetic-test this)
+- [~] Anchor point system — data model done, height-snap math verified in isolation; live tap-to-place trigger not yet exercised end-to-end (blocked on Unity Editor focus issue, needs Kalpan to run it live)
+- [x] API documentation (auto-generated OpenAPI/Swagger at `/docs` — no separate hand-written doc)

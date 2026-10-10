@@ -12,6 +12,7 @@ namespace Aayam.UI
         ARScan,          // Main AR experience
         ProductBrowser,  // Bottom-sheet product list
         ProductDetail,   // Product info card
+        QRScanner,       // Camera QR scan - decodes to a product, then -> ARScan
         Settings,
         Debug
     }

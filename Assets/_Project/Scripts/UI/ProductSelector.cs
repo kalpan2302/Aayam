@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using Aayam.Core.Bootstrap;
+using Aayam.Services;
 
 namespace Aayam.UI
 {
@@ -17,48 +20,16 @@ namespace Aayam.UI
         public Sprite   Thumbnail;
         public string   CompatibilityLabel; // "âœ“ Fits your door" / "Check required"
         public Color    CompatibilityColor;
-        public GameObject ModelPrefab;     // 3D prefab to place in AR
-    }
 
-    // â”€â”€â”€ Product Card (per item) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Design-time override: assign a prefab in the Inspector to skip the
+        // network fetch entirely (useful for UI testing without a backend).
+        public GameObject ModelPrefab;
 
-    /// <summary>
-    /// Controls a single product card in the horizontal scroll list.
-    /// Attach to the product item prefab.
-    /// </summary>
-    public class ProductCard : MonoBehaviour
-    {
-        [SerializeField] private Image           _thumbnail;
-        [SerializeField] private Text   _nameText;
-        [SerializeField] private Text   _priceText;
-        [SerializeField] private Text   _compatText;
-        [SerializeField] private Button          _selectButton;
-        [SerializeField] private GameObject      _selectedIndicator;
-
-        public event Action<ProductUIItem> OnSelected;
-        private ProductUIItem _data;
-
-        public void Bind(ProductUIItem data)
-        {
-            _data = data;
-
-            if (_thumbnail   != null && data.Thumbnail != null) _thumbnail.sprite = data.Thumbnail;
-            if (_nameText    != null) _nameText.text    = data.Name;
-            if (_priceText   != null) _priceText.text   = data.PriceFormatted;
-            if (_compatText  != null)
-            {
-                _compatText.text  = data.CompatibilityLabel;
-                _compatText.color = data.CompatibilityColor;
-            }
-
-            _selectButton?.onClick.RemoveAllListeners();
-            _selectButton?.onClick.AddListener(() => OnSelected?.Invoke(_data));
-        }
-
-        public void SetSelected(bool selected)
-        {
-            _selectedIndicator?.SetActive(selected);
-        }
+        // Real path: populated when this item came from the backend. If
+        // ModelPrefab is unset, HandleProductSelected downloads this instead.
+        public string    ModelUrl;
+        public string    Sku;
+        public float      AnchorYMm = -1f;   // height from floor, mm; -1 = no anchor data
     }
 
     // â”€â”€â”€ Product Selector (scroll list) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -77,19 +48,79 @@ namespace Aayam.UI
         [Header("AR HUD")]
         [SerializeField] private ARHUDController _hud;
 
+        [Header("Model Loading")]
+        [SerializeField] private Aayam.Services.ModelLoader _modelLoader;
+        [SerializeField] private Aayam.Services.ModelInstanceManager _modelInstanceManager;
+
         // â”€â”€â”€ Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         public event Action<ProductUIItem> OnProductSelected;
 
         // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private readonly List<ProductCard> _cards = new();
         private ProductUIItem              _selectedItem;
+        private ProductApiService          _apiService;
 
         // â”€â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-        private void Start()
+        private void Awake()
         {
-            // Load stub data for Phase 1 testing
-            LoadStubProducts();
+            if (_modelLoader == null)
+                _modelLoader = FindFirstObjectByType<Aayam.Services.ModelLoader>();
+            if (_modelInstanceManager == null)
+                _modelInstanceManager = FindFirstObjectByType<Aayam.Services.ModelInstanceManager>();
+
+            // ServiceLocator.TryGet() throws if Initialize() was never called,
+            // despite the "Try" name - IsRegistered() is the one that's actually
+            // safe pre-init (it just checks the dictionary, no EnsureInitialized()
+            // call). There's no AppBootstrapper in this test scene (it would try
+            // to load a scene called "ARScene" that doesn't exist), so this path
+            // always falls through to AppConfig.Load() here - that's expected.
+            AppConfig config = ServiceLocator.IsRegistered<AppConfig>()
+                ? ServiceLocator.Get<AppConfig>()
+                : AppConfig.Load();
+            _apiService = new ProductApiService(config.ApiBaseUrl, config.CdnBaseUrl);
+        }
+
+        private async void Start()
+        {
+            // Try the real backend first; fall back to stub data (e.g. the
+            // backend isn't running, or this is a pure UI-in-Editor test) so
+            // the screen is never left empty.
+            List<ProductUIItem> items = null;
+            try
+            {
+                var summaries = await _apiService.FetchProductListAsync();
+                if (summaries.Count > 0)
+                {
+                    items = new List<ProductUIItem>();
+                    foreach (var s in summaries)
+                    {
+                        items.Add(new ProductUIItem
+                        {
+                            ProductId          = s.Sku,
+                            Sku                 = s.Sku,
+                            Name                = s.Name,
+                            Brand               = s.BrandName,
+                            PriceFormatted      = FormatPrice(s.Price, s.Currency),
+                            CompatibilityLabel  = s.Has3DModel ? "" : "No 3D model yet",
+                            CompatibilityColor  = s.Has3DModel ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.6f, 0.2f),
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ProductSelector] Backend fetch failed, using stub data: {ex.Message}");
+            }
+
+            if (items != null) Populate(items);
+            else LoadStubProducts();
+        }
+
+        private static string FormatPrice(float price, string currency)
+        {
+            string symbol = currency == "INR" ? "₹" : (currency ?? "") + " ";
+            return $"{symbol}{price:N0}";
         }
 
         // â”€â”€â”€ Population â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -121,7 +152,7 @@ namespace Aayam.UI
 
         // â”€â”€â”€ Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-        private void HandleProductSelected(ProductUIItem item)
+        private async void HandleProductSelected(ProductUIItem item)
         {
             _selectedItem = item;
 
@@ -137,12 +168,66 @@ namespace Aayam.UI
             }
 
             OnProductSelected?.Invoke(item);
-
-            // Start AR placement
-            if (item.ModelPrefab != null)
-                _hud?.BeginPlacementFor(item.ModelPrefab, item.ProductId);
-
             Debug.Log($"[ProductSelector] Selected: {item.Name} ({item.ProductId})");
+
+            // Design-time override takes priority - skip the network entirely.
+            if (item.ModelPrefab != null)
+            {
+                _hud?.BeginPlacementFor(item.ModelPrefab, item.ProductId, item.AnchorYMm);
+                return;
+            }
+
+            string sku = !string.IsNullOrEmpty(item.Sku) ? item.Sku : item.ProductId;
+            await LoadAndPlaceAsync(sku);
+        }
+
+        /// <summary>Entry point for selection paths that don't go through a
+        /// catalogue card - currently the QR scanner (decoded "aayam://product/{sku}"
+        /// link via DeepLinkParser). Does the same fetch -> download -> place
+        /// flow as tapping a card.</summary>
+        public async void SelectProductBySku(string sku)
+        {
+            await LoadAndPlaceAsync(sku);
+        }
+
+        /// <summary>Fetch full detail (list items don't carry model_url/anchor
+        /// data - only the detail endpoint does), download the GLB, then begin
+        /// placement with an already-loaded instance.</summary>
+        private async Task LoadAndPlaceAsync(string sku)
+        {
+            Aayam.Models.ProductData detail = null;
+            try { detail = await _apiService.FetchProductDetailAsync(sku); }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[ProductSelector] Failed to fetch detail for '{sku}': {ex.Message}");
+            }
+
+            if (detail?.Asset?.ModelUrl == null)
+            {
+                Debug.LogWarning($"[ProductSelector] No model available for '{sku}' - cannot start placement.");
+                return;
+            }
+
+            if (_modelLoader == null)
+            {
+                Debug.LogError("[ProductSelector] No ModelLoader assigned/found - cannot load model.");
+                return;
+            }
+
+            GameObject instance = await _modelLoader.LoadFromUrlAsync(detail.Asset.ModelUrl, sku);
+            if (instance == null)
+            {
+                Debug.LogError($"[ProductSelector] Model load failed for '{sku}'.");
+                return;
+            }
+
+            _modelInstanceManager?.SetupModelForAR(instance, detail.Category);
+            // ExecutePlacement (ObjectPlacementController) instantiates a clone of
+            // this at placement time - hide the loaded template until then.
+            instance.SetActive(false);
+
+            float anchorYMm = detail.Asset.Anchor?.YMm ?? -1f;
+            _hud?.BeginPlacementFor(instance, sku, anchorYMm);
         }
 
         // â”€â”€â”€ Stub Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

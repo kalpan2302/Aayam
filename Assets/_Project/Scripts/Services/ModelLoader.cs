@@ -146,7 +146,10 @@ namespace Aayam.Services
             var root = new GameObject("GLB_Model");
             try
             {
-                var gltf = new GltfImport(null, new ConsoleLogger());
+                // glTFast 6.x's GltfImport ctor is (downloadProvider, deferAgent,
+                // materialGenerator, logger) - logger is 4th, not 2nd. Named arg
+                // so this doesn't silently break again on a future reorder.
+                var gltf = new GltfImport(logger: new ConsoleLogger());
 
                 var settings = new ImportSettings
                 {

@@ -30,6 +30,7 @@ namespace Aayam.UI
         [SerializeField] private Button _resetButton;
         [SerializeField] private Button _compareButton;
         [SerializeField] private Button _screenshotButton;
+        [SerializeField] private Button _scanButton;
 
         [Header("Button Labels")]
         [SerializeField] private Text _placeButtonLabel;
@@ -56,6 +57,7 @@ namespace Aayam.UI
             _resetButton?.onClick.AddListener(OnResetClicked);
             _compareButton?.onClick.AddListener(OnCompareClicked);
             _screenshotButton?.onClick.AddListener(OnScreenshotClicked);
+            _scanButton?.onClick.AddListener(OnScanClicked);
 
             // Subscribe to AR events
             AREventBus.OnSessionStateChanged += OnSessionStateChanged;
@@ -173,6 +175,11 @@ namespace Aayam.UI
             _screenshot?.CaptureScreenshot();
         }
 
+        private void OnScanClicked()
+        {
+            _screenManager?.ShowScreen(AppScreen.QRScanner);
+        }
+
         // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         public void UpdateStatus(string message)
@@ -200,10 +207,12 @@ namespace Aayam.UI
             SetPlaceButtonEnabled(canPlace);
         }
 
-        /// <summary>Called externally when a product has been selected and placement should start.</summary>
-        public void BeginPlacementFor(GameObject prefab, string productId)
+        /// <summary>Called externally when a product has been selected and placement should start.
+        /// anchorHeightMm is the product's standard mounting height from the floor (mm),
+        /// or -1 if unknown - see DoorSurfacePlacer.SnapToStandardHeight.</summary>
+        public void BeginPlacementFor(GameObject prefab, string productId, float anchorHeightMm = -1f)
         {
-            _placementController?.StartPlacement(prefab, productId);
+            _placementController?.StartPlacement(prefab, productId, anchorHeightMm);
             _isPlacingMode = true;
             SetPlaceButtonLabel("Cancel");
             UpdateStatus("Aim at door and tap to place");
