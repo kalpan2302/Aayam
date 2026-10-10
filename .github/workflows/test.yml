@@ -31,7 +31,7 @@ jobs:
             Library-
 
       - name: Run EditMode Tests
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.2
         with:
           projectPath: .
           testMode: editmode
@@ -66,7 +66,7 @@ jobs:
             Library-
 
       - name: Run PlayMode Tests
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.2
         with:
           projectPath: .
           testMode: playmode
