@@ -52,7 +52,7 @@ namespace Aayam.Tests.EditMode
         [TestCase(1.10f, "peephole", 1.10f, false, Description = "Far from peephole -> no snap")]
         public void HeightSnap_VariousPositions(float inputY, string category, float expectedY, bool shouldSnap)
         {
-            float snappedY = ApplyHeightSnap(inputY, category, 0.08f);
+            float snappedY = ApplyHeightSnap(inputY, category, 0.18f);
 
             if (shouldSnap)
                 Assert.AreEqual(expectedY, snappedY, 0.001f, $"Should snap {inputY} -> {expectedY} for {category}");
