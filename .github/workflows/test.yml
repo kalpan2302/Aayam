@@ -11,7 +11,10 @@ permissions:
   checks: write
 
 env:
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  # UNITY_LICENSE (.ulf manual activation) intentionally omitted - Unity no
+  # longer supports manual/offline activation for Personal licenses as of
+  # 2026-10 (confirmed via https://docs.unity3d.com/Manual/ManualActivationGuide.html).
+  # Email/password is now the only supported activation path for Personal.
   UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
   UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
