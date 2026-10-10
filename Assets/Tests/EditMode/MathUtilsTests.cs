@@ -87,7 +87,7 @@ namespace Aayam.Tests.EditMode
         }
 
         private static float SnapToNearest(float angle, float snap)
-            => Mathf.Round(angle / snap) * snap;
+            => Mathf.Floor(angle / snap + 0.5f) * snap;
 
         private static bool IsWithinDoorRange(float width, float height)
         {

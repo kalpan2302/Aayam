@@ -1,0 +1,392 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1791616552.1255498,
+    "seen": 1791616712.7969122,
+    "ast_hash": "3b541b9935fcf0831355da956f897645",
+    "semantic_hash": "3b541b9935fcf0831355da956f897645"
+  },
+  "Aayam.slnx": {
+    "mtime": 1790697472.324176,
+    "seen": 1791616712.7969139,
+    "ast_hash": "34b004c5ebc26cc0ffee1e3df4489f1b",
+    "semantic_hash": "34b004c5ebc26cc0ffee1e3df4489f1b"
+  },
+  "Assets/Editor/ProjectStructureCreator.cs": {
+    "mtime": 1790697472.3247457,
+    "seen": 1791616712.796915,
+    "ast_hash": "b62397ff4ff21b144d2793a2fe8bf2d2",
+    "semantic_hash": "b62397ff4ff21b144d2793a2fe8bf2d2"
+  },
+  "Assets/Editor/URPConfigValidator.cs": {
+    "mtime": 1790697472.3248599,
+    "seen": 1791616712.796916,
+    "ast_hash": "b4906a1ec59dff50cb9ebabd928a0807",
+    "semantic_hash": "b4906a1ec59dff50cb9ebabd928a0807"
+  },
+  "Assets/Resources/BillingMode.json": {
+    "mtime": 1790697472.3252506,
+    "seen": 1791616712.796916,
+    "ast_hash": "cdcb9f058d8e4e416714ab01b9cb53df",
+    "semantic_hash": "cdcb9f058d8e4e416714ab01b9cb53df"
+  },
+  "Assets/Tests/EditMode/DoorDetectionTests.cs": {
+    "mtime": 1790697472.3260298,
+    "seen": 1791616712.796917,
+    "ast_hash": "5fe0ef09551b250a019dc64bbc394fb9",
+    "semantic_hash": "5fe0ef09551b250a019dc64bbc394fb9"
+  },
+  "Assets/Tests/EditMode/MathUtilsTests.cs": {
+    "mtime": 1790697472.3261423,
+    "seen": 1791616712.796917,
+    "ast_hash": "30fb3fb1eac10e5086e8341e3d835584",
+    "semantic_hash": "30fb3fb1eac10e5086e8341e3d835584"
+  },
+  "Assets/Tests/EditMode/ModelCacheTests.cs": {
+    "mtime": 1790697472.32627,
+    "seen": 1791616712.796918,
+    "ast_hash": "e844514d882cf95cf64b1f16d5aa0b90",
+    "semantic_hash": "e844514d882cf95cf64b1f16d5aa0b90"
+  },
+  "Assets/Tests/EditMode/PlacementTests.cs": {
+    "mtime": 1790697472.326447,
+    "seen": 1791616712.796918,
+    "ast_hash": "e46c948d3a81a16155090f085a0e6581",
+    "semantic_hash": "e46c948d3a81a16155090f085a0e6581"
+  },
+  "Assets/Tests/PlayMode/ScreenNavigationTests.cs": {
+    "mtime": 1790697472.3270998,
+    "seen": 1791616712.796919,
+    "ast_hash": "1d4c1dc03e27eaa8513aa964d21f0bec",
+    "semantic_hash": "1d4c1dc03e27eaa8513aa964d21f0bec"
+  },
+  "Assets/_Project/Scripts/AR/Core/ARConfiguration.cs": {
+    "mtime": 1790697472.330519,
+    "seen": 1791616712.796919,
+    "ast_hash": "e73650f2f3c2eb9712ffe571f8d9ba7a",
+    "semantic_hash": "e73650f2f3c2eb9712ffe571f8d9ba7a"
+  },
+  "Assets/_Project/Scripts/AR/Core/AREventBus.cs": {
+    "mtime": 1790697472.330624,
+    "seen": 1791616712.79692,
+    "ast_hash": "e8e9a5f110b5589633258e4b15bc388b",
+    "semantic_hash": "e8e9a5f110b5589633258e4b15bc388b"
+  },
+  "Assets/_Project/Scripts/AR/Core/ARSessionController.cs": {
+    "mtime": 1790697472.3307683,
+    "seen": 1791616712.79692,
+    "ast_hash": "eb888539c3554f8727fbdeeeab51cd0a",
+    "semantic_hash": "eb888539c3554f8727fbdeeeab51cd0a"
+  },
+  "Assets/_Project/Scripts/AR/Core/CameraPermissionHandler.cs": {
+    "mtime": 1790697472.3308947,
+    "seen": 1791616712.79692,
+    "ast_hash": "2e08db5cd39faa52fdefa9d42cab98a4",
+    "semantic_hash": "2e08db5cd39faa52fdefa9d42cab98a4"
+  },
+  "Assets/_Project/Scripts/AR/Core/DeviceCapabilityChecker.cs": {
+    "mtime": 1790697472.3310308,
+    "seen": 1791616712.796921,
+    "ast_hash": "9aa790f44c51304a4856b2a530b19acb",
+    "semantic_hash": "9aa790f44c51304a4856b2a530b19acb"
+  },
+  "Assets/_Project/Scripts/AR/Core/LightEstimationController.cs": {
+    "mtime": 1790697472.3311534,
+    "seen": 1791616712.796921,
+    "ast_hash": "3c04242ce389b2aab3b7dc4c96b3ebe6",
+    "semantic_hash": "3c04242ce389b2aab3b7dc4c96b3ebe6"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/DragHandler.cs": {
+    "mtime": 1790697472.3313553,
+    "seen": 1791616712.7969222,
+    "ast_hash": "629ceb77de8a20d125041e2a7bc6331e",
+    "semantic_hash": "629ceb77de8a20d125041e2a7bc6331e"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/GestureDetector.cs": {
+    "mtime": 1790697472.3314717,
+    "seen": 1791616712.7969222,
+    "ast_hash": "52523dc54dba585352c5cf92aa996984",
+    "semantic_hash": "52523dc54dba585352c5cf92aa996984"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/InteractionSystem.cs": {
+    "mtime": 1790697472.3316095,
+    "seen": 1791616712.7969222,
+    "ast_hash": "ade54f3ac6f54b449219ee9ab7621b4d",
+    "semantic_hash": "ade54f3ac6f54b449219ee9ab7621b4d"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/ObjectSelector.cs": {
+    "mtime": 1790697472.331787,
+    "seen": 1791616712.796923,
+    "ast_hash": "047127edc73c7d6901d0d7c84eafcddf",
+    "semantic_hash": "047127edc73c7d6901d0d7c84eafcddf"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/RotationHandler.cs": {
+    "mtime": 1790697472.332067,
+    "seen": 1791616712.796923,
+    "ast_hash": "e0e62b67cf21777c56191073b73301ba",
+    "semantic_hash": "e0e62b67cf21777c56191073b73301ba"
+  },
+  "Assets/_Project/Scripts/AR/Interaction/ScaleHandler.cs": {
+    "mtime": 1790697472.3324335,
+    "seen": 1791616712.7969239,
+    "ast_hash": "07abb7847cb7faff10f09f19cd1a635e",
+    "semantic_hash": "07abb7847cb7faff10f09f19cd1a635e"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/DepthPlacement.cs": {
+    "mtime": 1790697472.3326926,
+    "seen": 1791616712.7969239,
+    "ast_hash": "e8fce40d29a93287cf020505098b124f",
+    "semantic_hash": "e8fce40d29a93287cf020505098b124f"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/DepthTextureHandler.cs": {
+    "mtime": 1790697472.3328412,
+    "seen": 1791616712.7969239,
+    "ast_hash": "fc6e1adda5eec71c1cdb7a491d6bc2ac",
+    "semantic_hash": "fc6e1adda5eec71c1cdb7a491d6bc2ac"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/DepthVisualizer.cs": {
+    "mtime": 1790697472.3329709,
+    "seen": 1791616712.7969248,
+    "ast_hash": "57565db4c4beceacab66cf5cea2be1de",
+    "semantic_hash": "57565db4c4beceacab66cf5cea2be1de"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/MeshingController.cs": {
+    "mtime": 1790697472.3330941,
+    "seen": 1791616712.7969248,
+    "ast_hash": "1e333c17e7cf376fb3a5ad232ad4d477",
+    "semantic_hash": "1e333c17e7cf376fb3a5ad232ad4d477"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/OcclusionController.cs": {
+    "mtime": 1790697472.3332279,
+    "seen": 1791616712.796926,
+    "ast_hash": "652f775bf48d68503b1c9bca853882cb",
+    "semantic_hash": "652f775bf48d68503b1c9bca853882cb"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/OcclusionQualityManager.cs": {
+    "mtime": 1790697472.333362,
+    "seen": 1791616712.796926,
+    "ast_hash": "faab58b58b4831dd04a324242eea5b9b",
+    "semantic_hash": "faab58b58b4831dd04a324242eea5b9b"
+  },
+  "Assets/_Project/Scripts/AR/Occlusion/PlaneOcclusionController.cs": {
+    "mtime": 1790697472.3334935,
+    "seen": 1791616712.796926,
+    "ast_hash": "8a117473f361623e9d71254b9c82f2cb",
+    "semantic_hash": "8a117473f361623e9d71254b9c82f2cb"
+  },
+  "Assets/_Project/Scripts/AR/Placement/AnchorController.cs": {
+    "mtime": 1790697472.3337471,
+    "seen": 1791616712.796927,
+    "ast_hash": "c726e11690dfa9ae28ac32730ac5dc77",
+    "semantic_hash": "c726e11690dfa9ae28ac32730ac5dc77"
+  },
+  "Assets/_Project/Scripts/AR/Placement/DoorSurfacePlacer.cs": {
+    "mtime": 1790697472.3338861,
+    "seen": 1791616712.796927,
+    "ast_hash": "424a2bae61c48f44f8e370a46123cf65",
+    "semantic_hash": "424a2bae61c48f44f8e370a46123cf65"
+  },
+  "Assets/_Project/Scripts/AR/Placement/ObjectPlacementController.cs": {
+    "mtime": 1790697472.3340323,
+    "seen": 1791616712.796928,
+    "ast_hash": "7a8dbd78b8d38e0a7b0f33a1081eb9c4",
+    "semantic_hash": "7a8dbd78b8d38e0a7b0f33a1081eb9c4"
+  },
+  "Assets/_Project/Scripts/AR/Placement/PlacementFeedback.cs": {
+    "mtime": 1790697472.3342264,
+    "seen": 1791616712.796928,
+    "ast_hash": "9a6e22ca150ab443d939d56ea6fa9465",
+    "semantic_hash": "9a6e22ca150ab443d939d56ea6fa9465"
+  },
+  "Assets/_Project/Scripts/AR/Placement/PlacementHistory.cs": {
+    "mtime": 1790697472.3344529,
+    "seen": 1791616712.796928,
+    "ast_hash": "3ce42fe0bc1a5d78d9b27cd8c6c5933d",
+    "semantic_hash": "3ce42fe0bc1a5d78d9b27cd8c6c5933d"
+  },
+  "Assets/_Project/Scripts/AR/Placement/PlacementReticle.cs": {
+    "mtime": 1790697472.3346055,
+    "seen": 1791616712.7969291,
+    "ast_hash": "aaba935f95dd7d22ce4154531590d3a7",
+    "semantic_hash": "aaba935f95dd7d22ce4154531590d3a7"
+  },
+  "Assets/_Project/Scripts/AR/Planes/DoorCandidateDetector.cs": {
+    "mtime": 1790697472.3348234,
+    "seen": 1791616712.7969291,
+    "ast_hash": "3d8717f8a5a42aeb9f75371582cbfd62",
+    "semantic_hash": "3d8717f8a5a42aeb9f75371582cbfd62"
+  },
+  "Assets/_Project/Scripts/AR/Planes/PlaneBoundaryAnalyzer.cs": {
+    "mtime": 1790697472.3349266,
+    "seen": 1791616712.7969291,
+    "ast_hash": "4f665da04c270c891c9b9020b649b76d",
+    "semantic_hash": "4f665da04c270c891c9b9020b649b76d"
+  },
+  "Assets/_Project/Scripts/AR/Planes/PlaneClassifier.cs": {
+    "mtime": 1790697472.3350434,
+    "seen": 1791616712.79693,
+    "ast_hash": "493eca73b39335f766a310a907227f3c",
+    "semantic_hash": "493eca73b39335f766a310a907227f3c"
+  },
+  "Assets/_Project/Scripts/AR/Planes/PlaneDebugVisualizer.cs": {
+    "mtime": 1790697472.33516,
+    "seen": 1791616712.79693,
+    "ast_hash": "1a64eec5da32740b87ee6694d30844fb",
+    "semantic_hash": "1a64eec5da32740b87ee6694d30844fb"
+  },
+  "Assets/_Project/Scripts/AR/Planes/PlaneEventHandler.cs": {
+    "mtime": 1790697472.3352773,
+    "seen": 1791616712.796931,
+    "ast_hash": "07609bcf41e0b65b942382e2a057fed9",
+    "semantic_hash": "07609bcf41e0b65b942382e2a057fed9"
+  },
+  "Assets/_Project/Scripts/AR/Planes/PlaneVisualizationController.cs": {
+    "mtime": 1790697472.3353927,
+    "seen": 1791616712.796931,
+    "ast_hash": "a400619f17be37748a89a283c2b1edce",
+    "semantic_hash": "a400619f17be37748a89a283c2b1edce"
+  },
+  "Assets/_Project/Scripts/AR/Planes/VerticalPlaneFilter.cs": {
+    "mtime": 1790697472.33552,
+    "seen": 1791616712.796931,
+    "ast_hash": "f5afc54141fdc0783ca3069e4a5a1e8a",
+    "semantic_hash": "f5afc54141fdc0783ca3069e4a5a1e8a"
+  },
+  "Assets/_Project/Scripts/Core/Bootstrap/AppBootstrapper.cs": {
+    "mtime": 1790697472.3359077,
+    "seen": 1791616712.796932,
+    "ast_hash": "f1736324476a920015fa7bf09e8ab5c5",
+    "semantic_hash": "f1736324476a920015fa7bf09e8ab5c5"
+  },
+  "Assets/_Project/Scripts/Core/Bootstrap/ServiceLocator.cs": {
+    "mtime": 1790697472.3360293,
+    "seen": 1791616712.7969332,
+    "ast_hash": "82f4faddad20c3b7854d357f0b81cbf7",
+    "semantic_hash": "82f4faddad20c3b7854d357f0b81cbf7"
+  },
+  "Assets/_Project/Scripts/Core/Config/AppConfig.cs": {
+    "mtime": 1790697472.3362322,
+    "seen": 1791616712.7969332,
+    "ast_hash": "d89b905e89f5df6cf1b3124ceabd7668",
+    "semantic_hash": "d89b905e89f5df6cf1b3124ceabd7668"
+  },
+  "Assets/_Project/Scripts/Core/Events/EventBus.cs": {
+    "mtime": 1790697472.3364484,
+    "seen": 1791616712.7969332,
+    "ast_hash": "d5037f521b161b760d958436efdccad2",
+    "semantic_hash": "d5037f521b161b760d958436efdccad2"
+  },
+  "Assets/_Project/Scripts/Models/CompatibilityResult.cs": {
+    "mtime": 1790697472.3367822,
+    "seen": 1791616712.796934,
+    "ast_hash": "0dde08f57c72c3246b94d8faba9373fb",
+    "semantic_hash": "0dde08f57c72c3246b94d8faba9373fb"
+  },
+  "Assets/_Project/Scripts/Models/ProductData.cs": {
+    "mtime": 1790697472.3369048,
+    "seen": 1791616712.796934,
+    "ast_hash": "621008238d18f8c8032010c83bb1363f",
+    "semantic_hash": "621008238d18f8c8032010c83bb1363f"
+  },
+  "Assets/_Project/Scripts/Services/LODSetup.cs": {
+    "mtime": 1790697472.3372455,
+    "seen": 1791616712.7969348,
+    "ast_hash": "d59b7c80d09587fad841979ca9149178",
+    "semantic_hash": "d59b7c80d09587fad841979ca9149178"
+  },
+  "Assets/_Project/Scripts/Services/ModelCache.cs": {
+    "mtime": 1790697472.3373988,
+    "seen": 1791616712.7969348,
+    "ast_hash": "27355d42103081f9903fc826496d64a6",
+    "semantic_hash": "27355d42103081f9903fc826496d64a6"
+  },
+  "Assets/_Project/Scripts/Services/ModelInstanceManager.cs": {
+    "mtime": 1790697472.3375201,
+    "seen": 1791616712.7969348,
+    "ast_hash": "268bbb7b205af1e29e7a4983a56a35c2",
+    "semantic_hash": "268bbb7b205af1e29e7a4983a56a35c2"
+  },
+  "Assets/_Project/Scripts/Services/ModelLoader.cs": {
+    "mtime": 1790697472.3376687,
+    "seen": 1791616712.796936,
+    "ast_hash": "944812cfcec595d37f3c6adfeaa67d55",
+    "semantic_hash": "944812cfcec595d37f3c6adfeaa67d55"
+  },
+  "Assets/_Project/Scripts/UI/ARHUDController.cs": {
+    "mtime": 1790697472.3379142,
+    "seen": 1791616712.796936,
+    "ast_hash": "46caba3ee9c4a610c01d8adb53032e44",
+    "semantic_hash": "46caba3ee9c4a610c01d8adb53032e44"
+  },
+  "Assets/_Project/Scripts/UI/CoachingOverlay.cs": {
+    "mtime": 1790697472.3381422,
+    "seen": 1791616712.796936,
+    "ast_hash": "08ac16a8647cba9875bdb4b162a797ff",
+    "semantic_hash": "08ac16a8647cba9875bdb4b162a797ff"
+  },
+  "Assets/_Project/Scripts/UI/DebugPanel.cs": {
+    "mtime": 1790697472.338261,
+    "seen": 1791616712.796937,
+    "ast_hash": "52239003260f64eaff6a6b805851ab4c",
+    "semantic_hash": "52239003260f64eaff6a6b805851ab4c"
+  },
+  "Assets/_Project/Scripts/UI/ModelPreview.cs": {
+    "mtime": 1790697472.3383772,
+    "seen": 1791616712.796937,
+    "ast_hash": "3a91193a8c28627fb8ed4a161fe8b011",
+    "semantic_hash": "3a91193a8c28627fb8ed4a161fe8b011"
+  },
+  "Assets/_Project/Scripts/UI/ProductSelector.cs": {
+    "mtime": 1790697472.338525,
+    "seen": 1791616712.796938,
+    "ast_hash": "38129ebfb0d828cbfeb4aa68192bab44",
+    "semantic_hash": "38129ebfb0d828cbfeb4aa68192bab44"
+  },
+  "Assets/_Project/Scripts/UI/SafeAreaAdapter.cs": {
+    "mtime": 1790697472.3386283,
+    "seen": 1791616712.796938,
+    "ast_hash": "a2249f2299eae1ee9bf6a362fee5855d",
+    "semantic_hash": "a2249f2299eae1ee9bf6a362fee5855d"
+  },
+  "Assets/_Project/Scripts/UI/ScreenManager.cs": {
+    "mtime": 1790697472.3390057,
+    "seen": 1791616712.796938,
+    "ast_hash": "7c7f04b743f967db88c5465b6fcb578f",
+    "semantic_hash": "7c7f04b743f967db88c5465b6fcb578f"
+  },
+  "Assets/_Project/Scripts/UI/ScreenshotCapture.cs": {
+    "mtime": 1790697472.3391535,
+    "seen": 1791616712.796939,
+    "ast_hash": "709ddec93096bf24f8d980e04dc87410",
+    "semantic_hash": "709ddec93096bf24f8d980e04dc87410"
+  },
+  "Assets/_Project/Scripts/Utilities/MathUtils.cs": {
+    "mtime": 1790697472.3394759,
+    "seen": 1791616712.796939,
+    "ast_hash": "d64f682f29aa12ffc3c50c5c8d6cf097",
+    "semantic_hash": "d64f682f29aa12ffc3c50c5c8d6cf097"
+  },
+  "Assets/_Project/Scripts/Utilities/PerformanceProfiler.cs": {
+    "mtime": 1790697472.3395958,
+    "seen": 1791616712.796939,
+    "ast_hash": "4dcca3e362d74c99b8656420598b3e5a",
+    "semantic_hash": "4dcca3e362d74c99b8656420598b3e5a"
+  },
+  "Packages/manifest.json": {
+    "mtime": 1790697472.339866,
+    "seen": 1791616712.79694,
+    "ast_hash": "77ddb090fa5f6b357305b34ae28d135a",
+    "semantic_hash": "77ddb090fa5f6b357305b34ae28d135a"
+  },
+  "Packages/packages-lock.json": {
+    "mtime": 1790697472.3399763,
+    "seen": 1791616712.796941,
+    "ast_hash": "53d1c24a47054924784153782a4e6feb",
+    "semantic_hash": "53d1c24a47054924784153782a4e6feb"
+  },
+  "ProjectSettings/SceneTemplateSettings.json": {
+    "mtime": 1790697472.3410552,
+    "seen": 1791616712.796942,
+    "ast_hash": "eeb26e313b89cd9334b828428a4847ef",
+    "semantic_hash": "eeb26e313b89cd9334b828428a4847ef"
+  }
+}
