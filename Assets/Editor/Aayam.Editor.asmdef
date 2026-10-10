@@ -3,7 +3,13 @@
     "rootNamespace": "Aayam.Editor",
     "references": [
         "Aayam.Core",
-        "Aayam.AR"
+        "Aayam.AR",
+        "Aayam.Models",
+        "Aayam.Services",
+        "Aayam.UI",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
+        "Unity.XR.CoreUtils"
     ],
     "includePlatforms": [
         "Editor"

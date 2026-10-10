@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Aayam.AR.Core;
+using Aayam.AR.Planes;
 
 namespace Aayam.AR.Placement
 {
@@ -27,6 +28,7 @@ namespace Aayam.AR.Placement
         [SerializeField] private AnchorController   _anchorController;
         [SerializeField] private DoorSurfacePlacer  _doorPlacer;
         [SerializeField] private PlacementHistory   _history;
+        [SerializeField] private FloorPlaneDetector _floorDetector;
 
         [Header("Configuration")]
         [SerializeField] private int _maxObjects = 5;
@@ -34,15 +36,21 @@ namespace Aayam.AR.Placement
         // ─── Private State ────────────────────────────────────────
         private GameObject _pendingPrefab;
         private string     _pendingProductId;
+        private float       _pendingAnchorHeightMm = -1f;
         private readonly List<PlacedProduct> _placedObjects = new();
 
         // ─── Start Placement ──────────────────────────────────────
 
         /// <summary>
-        /// Begin the placement flow for a given product prefab.
+        /// Begin the placement flow for a given product prefab (or an
+        /// already-loaded runtime model instance - either works, since this
+        /// just clones whatever it's given at placement time).
+        /// anchorHeightMm is the product's real mounting height from the floor
+        /// (mm, from the backend's product_3d_assets.anchor_y_mm), or -1 if
+        /// unknown - see DoorSurfacePlacer.SnapToStandardHeight.
         /// The user will aim the reticle and tap to place.
         /// </summary>
-        public void StartPlacement(GameObject prefab, string productId = "")
+        public void StartPlacement(GameObject prefab, string productId = "", float anchorHeightMm = -1f)
         {
             if (_placedObjects.Count >= _maxObjects)
             {
@@ -50,9 +58,10 @@ namespace Aayam.AR.Placement
                 return;
             }
 
-            _pendingPrefab     = prefab;
-            _pendingProductId  = productId;
-            CurrentState       = PlacementState.Aiming;
+            _pendingPrefab          = prefab;
+            _pendingProductId       = productId;
+            _pendingAnchorHeightMm  = anchorHeightMm;
+            CurrentState            = PlacementState.Aiming;
 
             _reticle?.Show();
             Debug.Log($"[Placement] Aiming for product: {productId}");
@@ -103,6 +112,15 @@ namespace Aayam.AR.Placement
             Pose finalPose = _doorPlacer != null
                 ? _doorPlacer.CalculatePlacementPose(rawPose)
                 : rawPose;
+
+            // 1b. Snap vertical height to this product's real anchor_y_mm, if
+            // known and a floor reference has been detected (Phase 2 Step 7).
+            // Horizontal position stays wherever the user aimed.
+            if (_doorPlacer != null && _floorDetector != null && _floorDetector.HasFloor)
+            {
+                finalPose = _doorPlacer.SnapToStandardHeight(
+                    finalPose, _floorDetector.FloorWorldPosition, _pendingAnchorHeightMm);
+            }
 
             // 2. Create anchor
             var anchor = _anchorController?.CreateAnchor(finalPose);

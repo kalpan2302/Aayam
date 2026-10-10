@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql+asyncpg://aayam:aayam_dev_123@localhost:5432/aayam"
+    # Port 5434, not 5432 - this machine runs another repo's Postgres on 5432.
+    DATABASE_URL: str = "postgresql+asyncpg://aayam:aayam_dev_123@localhost:5434/aayam"
     REDIS_URL: str = "redis://localhost:6379/0"
     AWS_S3_BUCKET: str = "aayam-assets-dev"
     AWS_REGION: str = "ap-south-1"

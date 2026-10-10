@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,14 +9,15 @@ from datetime import datetime
 from app.config import get_settings
 from app.database import init_db, engine
 from app.api.v1.router import api_router
+from app.storage import get_storage_dir
 
 settings = get_settings()
 
 # Dev-only local asset serving (see LOCAL_STORAGE_DIR) - no AWS/Cloudflare account
 # needed. Created on import so a fresh checkout doesn't fail to start; real assets
-# are gitignored (backend/storage/**/*), folder structure kept via .gitkeep.
-_storage_dir = Path(__file__).resolve().parent.parent / settings.LOCAL_STORAGE_DIR
-_storage_dir.mkdir(parents=True, exist_ok=True)
+# are gitignored (backend/storage/**/*.{glb,png,...}), folder structure kept via
+# .gitkeep.
+_storage_dir = get_storage_dir()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

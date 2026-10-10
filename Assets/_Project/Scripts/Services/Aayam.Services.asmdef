@@ -3,7 +3,9 @@
     "rootNamespace": "Aayam.Services",
     "references": [
         "Aayam.Core",
-        "Aayam.Models"
+        "Aayam.Models",
+        "Newtonsoft.Json",
+        "glTFast"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -12,7 +14,13 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.cloud.gltfast",
+            "expression": "",
+            "define": "GLTFAST_PRESENT"
+        }
+    ],
     "noEngineReferences": false
 }
 

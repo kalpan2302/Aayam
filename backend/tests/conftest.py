@@ -14,7 +14,7 @@ def settings():
         class TestSettings:
             ENVIRONMENT: str = "test"
             DEBUG: bool = True
-            DATABASE_URL: str = "postgresql+asyncpg://aayam:aayam_dev_123@localhost:5432/aayam_test"
+            DATABASE_URL: str = "postgresql+asyncpg://aayam:aayam_dev_123@localhost:5434/aayam_test"
             REDIS_URL: str = "redis://localhost:6379/1"
             API_KEY: str = "test-api-key"
             ADMIN_API_KEY: str = "test-admin-key"

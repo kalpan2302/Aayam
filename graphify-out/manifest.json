@@ -1,15 +1,15 @@
 {
   ".claude/settings.json": {
-    "mtime": 1791616552.1255498,
-    "seen": 1791616712.7969122,
+    "mtime": 1791627407.1087728,
+    "seen": 1791631483.9225159,
     "ast_hash": "3b541b9935fcf0831355da956f897645",
     "semantic_hash": "3b541b9935fcf0831355da956f897645"
   },
   "Aayam.slnx": {
-    "mtime": 1790697472.324176,
-    "seen": 1791616712.7969139,
-    "ast_hash": "34b004c5ebc26cc0ffee1e3df4489f1b",
-    "semantic_hash": "34b004c5ebc26cc0ffee1e3df4489f1b"
+    "mtime": 1791642273.4550576,
+    "seen": 1791642608.2747798,
+    "ast_hash": "bd6e42a950f4f1bce1b7e51e5b4c4733",
+    "semantic_hash": ""
   },
   "Assets/Editor/ProjectStructureCreator.cs": {
     "mtime": 1790697472.3247457,
@@ -36,10 +36,10 @@
     "semantic_hash": "5fe0ef09551b250a019dc64bbc394fb9"
   },
   "Assets/Tests/EditMode/MathUtilsTests.cs": {
-    "mtime": 1790697472.3261423,
-    "seen": 1791616712.796917,
-    "ast_hash": "30fb3fb1eac10e5086e8341e3d835584",
-    "semantic_hash": "30fb3fb1eac10e5086e8341e3d835584"
+    "mtime": 1791627407.1123242,
+    "seen": 1791631483.922529,
+    "ast_hash": "8bf7e0a15b1a92561d81f099c2f8c275",
+    "semantic_hash": ""
   },
   "Assets/Tests/EditMode/ModelCacheTests.cs": {
     "mtime": 1790697472.32627,
@@ -48,10 +48,10 @@
     "semantic_hash": "e844514d882cf95cf64b1f16d5aa0b90"
   },
   "Assets/Tests/EditMode/PlacementTests.cs": {
-    "mtime": 1790697472.326447,
-    "seen": 1791616712.796918,
-    "ast_hash": "e46c948d3a81a16155090f085a0e6581",
-    "semantic_hash": "e46c948d3a81a16155090f085a0e6581"
+    "mtime": 1791627407.1124895,
+    "seen": 1791631483.92253,
+    "ast_hash": "79f984b6cb6fcc0babb913a229722864",
+    "semantic_hash": ""
   },
   "Assets/Tests/PlayMode/ScreenNavigationTests.cs": {
     "mtime": 1790697472.3270998,
@@ -180,16 +180,16 @@
     "semantic_hash": "c726e11690dfa9ae28ac32730ac5dc77"
   },
   "Assets/_Project/Scripts/AR/Placement/DoorSurfacePlacer.cs": {
-    "mtime": 1790697472.3338861,
-    "seen": 1791616712.796927,
-    "ast_hash": "424a2bae61c48f44f8e370a46123cf65",
-    "semantic_hash": "424a2bae61c48f44f8e370a46123cf65"
+    "mtime": 1791631335.2848063,
+    "seen": 1791631483.922548,
+    "ast_hash": "9e5cb9578fe607f1324d7febe0ef4277",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/AR/Placement/ObjectPlacementController.cs": {
-    "mtime": 1790697472.3340323,
-    "seen": 1791616712.796928,
-    "ast_hash": "7a8dbd78b8d38e0a7b0f33a1081eb9c4",
-    "semantic_hash": "7a8dbd78b8d38e0a7b0f33a1081eb9c4"
+    "mtime": 1791631375.8928525,
+    "seen": 1791631483.922548,
+    "ast_hash": "ef1b864532789e2a012f1579d207c7af",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/AR/Placement/PlacementFeedback.cs": {
     "mtime": 1790697472.3342264,
@@ -264,10 +264,10 @@
     "semantic_hash": "82f4faddad20c3b7854d357f0b81cbf7"
   },
   "Assets/_Project/Scripts/Core/Config/AppConfig.cs": {
-    "mtime": 1790697472.3362322,
-    "seen": 1791616712.7969332,
-    "ast_hash": "d89b905e89f5df6cf1b3124ceabd7668",
-    "semantic_hash": "d89b905e89f5df6cf1b3124ceabd7668"
+    "mtime": 1791642536.209625,
+    "seen": 1791642608.2748039,
+    "ast_hash": "75edd08812dcad147116ec80ded3c589",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/Core/Events/EventBus.cs": {
     "mtime": 1790697472.3364484,
@@ -306,16 +306,16 @@
     "semantic_hash": "268bbb7b205af1e29e7a4983a56a35c2"
   },
   "Assets/_Project/Scripts/Services/ModelLoader.cs": {
-    "mtime": 1790697472.3376687,
-    "seen": 1791616712.796936,
-    "ast_hash": "944812cfcec595d37f3c6adfeaa67d55",
-    "semantic_hash": "944812cfcec595d37f3c6adfeaa67d55"
+    "mtime": 1791636150.7276518,
+    "seen": 1791639430.1424031,
+    "ast_hash": "45da1c005987da7c5d6f4d91c860179e",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/UI/ARHUDController.cs": {
-    "mtime": 1790697472.3379142,
-    "seen": 1791616712.796936,
-    "ast_hash": "46caba3ee9c4a610c01d8adb53032e44",
-    "semantic_hash": "46caba3ee9c4a610c01d8adb53032e44"
+    "mtime": 1791631319.6777887,
+    "seen": 1791631483.922567,
+    "ast_hash": "3183a2cc6af0adfa79a6ec448957de98",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/UI/CoachingOverlay.cs": {
     "mtime": 1790697472.3381422,
@@ -336,10 +336,10 @@
     "semantic_hash": "3a91193a8c28627fb8ed4a161fe8b011"
   },
   "Assets/_Project/Scripts/UI/ProductSelector.cs": {
-    "mtime": 1790697472.338525,
-    "seen": 1791616712.796938,
-    "ast_hash": "38129ebfb0d828cbfeb4aa68192bab44",
-    "semantic_hash": "38129ebfb0d828cbfeb4aa68192bab44"
+    "mtime": 1791639304.0612664,
+    "seen": 1791639430.142407,
+    "ast_hash": "7876c34c0602f9b7b7acd7594dd959d3",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/UI/SafeAreaAdapter.cs": {
     "mtime": 1790697472.3386283,
@@ -348,10 +348,10 @@
     "semantic_hash": "a2249f2299eae1ee9bf6a362fee5855d"
   },
   "Assets/_Project/Scripts/UI/ScreenManager.cs": {
-    "mtime": 1790697472.3390057,
-    "seen": 1791616712.796938,
-    "ast_hash": "7c7f04b743f967db88c5465b6fcb578f",
-    "semantic_hash": "7c7f04b743f967db88c5465b6fcb578f"
+    "mtime": 1791639288.256034,
+    "seen": 1791639430.14241,
+    "ast_hash": "729b991caebe9adc1bc56a4a64d710b4",
+    "semantic_hash": ""
   },
   "Assets/_Project/Scripts/UI/ScreenshotCapture.cs": {
     "mtime": 1790697472.3391535,
@@ -372,21 +372,483 @@
     "semantic_hash": "4dcca3e362d74c99b8656420598b3e5a"
   },
   "Packages/manifest.json": {
-    "mtime": 1790697472.339866,
-    "seen": 1791616712.79694,
-    "ast_hash": "77ddb090fa5f6b357305b34ae28d135a",
-    "semantic_hash": "77ddb090fa5f6b357305b34ae28d135a"
+    "mtime": 1791631181.2317252,
+    "seen": 1791631483.922575,
+    "ast_hash": "e438d0c5c82bae85ed7241b731180b43",
+    "semantic_hash": ""
   },
   "Packages/packages-lock.json": {
-    "mtime": 1790697472.3399763,
-    "seen": 1791616712.796941,
-    "ast_hash": "53d1c24a47054924784153782a4e6feb",
-    "semantic_hash": "53d1c24a47054924784153782a4e6feb"
+    "mtime": 1791636024.7005198,
+    "seen": 1791639430.142414,
+    "ast_hash": "c300acd9c95db1d0d22de5e886c290a7",
+    "semantic_hash": ""
   },
   "ProjectSettings/SceneTemplateSettings.json": {
     "mtime": 1790697472.3410552,
     "seen": 1791616712.796942,
     "ast_hash": "eeb26e313b89cd9334b828428a4847ef",
     "semantic_hash": "eeb26e313b89cd9334b828428a4847ef"
+  },
+  "Assets/Tests/EditMode/DeepLinkParserTests.cs": {
+    "mtime": 1791631395.2744792,
+    "seen": 1791631483.922526,
+    "ast_hash": "22b28275e51241dc0ec29bb058e621a1",
+    "semantic_hash": ""
+  },
+  "Assets/_Project/Scripts/AR/Planes/FloorPlaneDetector.cs": {
+    "mtime": 1791631349.0141876,
+    "seen": 1791631483.922552,
+    "ast_hash": "2fdf7636b0da99728f3d89649be80a6d",
+    "semantic_hash": ""
+  },
+  "Assets/_Project/Scripts/Models/DeepLinkParser.cs": {
+    "mtime": 1791631385.2284145,
+    "seen": 1791631483.9225621,
+    "ast_hash": "bb490e53c2ac0b869102f30e5edd4d85",
+    "semantic_hash": ""
+  },
+  "Assets/_Project/Scripts/Services/ProductApiService.cs": {
+    "mtime": 1791631229.6818378,
+    "seen": 1791631483.922567,
+    "ast_hash": "df76b1b8377daaeafaea793acae051c9",
+    "semantic_hash": ""
+  },
+  "backend/app/__init__.py": {
+    "mtime": 1791617114.622991,
+    "seen": 1791631483.9225779,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/api/__init__.py": {
+    "mtime": 1791617114.6231313,
+    "seen": 1791631483.922579,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/api/deps.py": {
+    "mtime": 1791617114.6232708,
+    "seen": 1791631483.922579,
+    "ast_hash": "6f743d0fc2c72f8ab4d5de064916f04b",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/__init__.py": {
+    "mtime": 1791617114.6234014,
+    "seen": 1791631483.92258,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/assets.py": {
+    "mtime": 1791630976.3732915,
+    "seen": 1791631483.922581,
+    "ast_hash": "212e3800401d47eca6a50a8be10ee706",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/brands.py": {
+    "mtime": 1791630295.3989491,
+    "seen": 1791631483.922581,
+    "ast_hash": "11ea27fdb714c71ee1a3581bac3d2b2d",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/categories.py": {
+    "mtime": 1791630295.3991518,
+    "seen": 1791631483.922582,
+    "ast_hash": "2ee83c0de28ee9e175f28209726c82e5",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/products.py": {
+    "mtime": 1791630295.3998253,
+    "seen": 1791631483.922583,
+    "ast_hash": "59c527fdf794a0aeeb72412ce9238873",
+    "semantic_hash": ""
+  },
+  "backend/app/api/v1/router.py": {
+    "mtime": 1791617114.6240084,
+    "seen": 1791631483.922584,
+    "ast_hash": "a9ba87a1aaf45be05b508bebb3ae330d",
+    "semantic_hash": ""
+  },
+  "backend/app/config.py": {
+    "mtime": 1791637293.252358,
+    "seen": 1791639430.142422,
+    "ast_hash": "9bf5841826b9fe9496c7293a9f764788",
+    "semantic_hash": ""
+  },
+  "backend/app/database.py": {
+    "mtime": 1791617114.6242673,
+    "seen": 1791631483.922585,
+    "ast_hash": "451d2b0cd5e327ad354fa3242bc0cc6c",
+    "semantic_hash": ""
+  },
+  "backend/app/main.py": {
+    "mtime": 1791630504.7520506,
+    "seen": 1791631483.9225862,
+    "ast_hash": "fb284a8b2c9ca9158e73d6c669c5742b",
+    "semantic_hash": ""
+  },
+  "backend/app/models/__init__.py": {
+    "mtime": 1791617114.6245553,
+    "seen": 1791631483.9225862,
+    "ast_hash": "7af71b713650bab7655b197b729c418e",
+    "semantic_hash": ""
+  },
+  "backend/app/models/product.py": {
+    "mtime": 1791617114.624749,
+    "seen": 1791631483.922587,
+    "ast_hash": "2e46e73b7bbbf2c36b4abad1d6fd5781",
+    "semantic_hash": ""
+  },
+  "backend/app/schemas/__init__.py": {
+    "mtime": 1791617114.6248887,
+    "seen": 1791631483.9225879,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/schemas/brand.py": {
+    "mtime": 1791617114.625018,
+    "seen": 1791631483.9225888,
+    "ast_hash": "5a46f76c7c4b2b9c1f2910fff4f4c744",
+    "semantic_hash": ""
+  },
+  "backend/app/schemas/category.py": {
+    "mtime": 1791617114.6251447,
+    "seen": 1791631483.9225888,
+    "ast_hash": "1be5987e42af83289284de30cd21c886",
+    "semantic_hash": ""
+  },
+  "backend/app/schemas/common.py": {
+    "mtime": 1791617114.625253,
+    "seen": 1791631483.922591,
+    "ast_hash": "7b589444fd162c3756ab16767f97a4ec",
+    "semantic_hash": ""
+  },
+  "backend/app/schemas/product.py": {
+    "mtime": 1791617114.6253612,
+    "seen": 1791631483.922591,
+    "ast_hash": "a35cabf0a1150ef49e811367109fc627",
+    "semantic_hash": ""
+  },
+  "backend/app/services/__init__.py": {
+    "mtime": 1791617114.625478,
+    "seen": 1791631483.922592,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/services/product_service.py": {
+    "mtime": 1791630295.4004123,
+    "seen": 1791631483.922593,
+    "ast_hash": "bfdeec2af42df5b1942cfda82d5f3be6",
+    "semantic_hash": ""
+  },
+  "backend/app/storage.py": {
+    "mtime": 1791630491.4192476,
+    "seen": 1791631483.922594,
+    "ast_hash": "7481d7a5dcab7b1b5d24afa926594b56",
+    "semantic_hash": ""
+  },
+  "backend/app/utils/__init__.py": {
+    "mtime": 1791617114.6257024,
+    "seen": 1791631483.922594,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": ""
+  },
+  "backend/app/utils/validators.py": {
+    "mtime": 1791617114.6258967,
+    "seen": 1791631483.922595,
+    "ast_hash": "850a946d1ca06d50cc14c6c57058516b",
+    "semantic_hash": ""
+  },
+  "backend/migrations/env.py": {
+    "mtime": 1791637313.21447,
+    "seen": 1791639430.142433,
+    "ast_hash": "6e91809c9018479993d368ca034dd9c8",
+    "semantic_hash": ""
+  },
+  "backend/migrations/versions/001_initial_schema.py": {
+    "mtime": 1791617114.626588,
+    "seen": 1791631483.922596,
+    "ast_hash": "35f6f4917ac959f35167a699bb5a1dc8",
+    "semantic_hash": ""
+  },
+  "backend/migrations/versions/002_triggers_and_functions.py": {
+    "mtime": 1791617114.6267328,
+    "seen": 1791631483.9225972,
+    "ast_hash": "c99f9f997a54ecbc85444f76bf37a56d",
+    "semantic_hash": ""
+  },
+  "backend/migrations/versions/003_views.py": {
+    "mtime": 1791617114.6268442,
+    "seen": 1791631483.922598,
+    "ast_hash": "8a90e14a93b893101ff27fd800d4dfab",
+    "semantic_hash": ""
+  },
+  "backend/scripts/__init__.py": {
+    "mtime": 1791617114.6271656,
+    "seen": 1791631483.922598,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "backend/scripts/seed_data.py": {
+    "mtime": 1791630295.401109,
+    "seen": 1791631483.9225988,
+    "ast_hash": "9d5c0b695bb347ee15afde58936e8572",
+    "semantic_hash": ""
+  },
+  "backend/tests/__init__.py": {
+    "mtime": 1791617114.6276207,
+    "seen": 1791631483.9226,
+    "ast_hash": "adbfc67dde51c86169fd9e5bccd6dd60",
+    "semantic_hash": ""
+  },
+  "backend/tests/conftest.py": {
+    "mtime": 1791637313.2167466,
+    "seen": 1791639430.142439,
+    "ast_hash": "406c1d4c49ea2f48b97796807ced82db",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_assets.py": {
+    "mtime": 1791630956.396633,
+    "seen": 1791631483.922601,
+    "ast_hash": "207eb6bdac2eff12a5d3caace46ac741",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_health.py": {
+    "mtime": 1791617114.627834,
+    "seen": 1791631483.922602,
+    "ast_hash": "28b650f3a94b7284defcbffcbc4a8819",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_products.py": {
+    "mtime": 1791630295.4021246,
+    "seen": 1791631483.922602,
+    "ast_hash": "aa66a19f3f993f0356786a6afbc860b4",
+    "semantic_hash": ""
+  },
+  ".claude/CLAUDE.md": {
+    "mtime": 1791627407.108619,
+    "seen": 1791631483.922603,
+    "ast_hash": "9b31786b637be3c13978bec4c2330752",
+    "semantic_hash": ""
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.md": {
+    "mtime": 1790697472.323906,
+    "seen": 1791631483.922604,
+    "ast_hash": "cec4dbc74639214bfa3f14a4d7719e9a",
+    "semantic_hash": ""
+  },
+  ".github/workflows/test.yml": {
+    "mtime": 1791627407.1114013,
+    "seen": 1791631483.922604,
+    "ast_hash": "59e6274f41f8e95257bb83448caba18a",
+    "semantic_hash": ""
+  },
+  ".github/workflows/unity-build.yml": {
+    "mtime": 1791627407.1116378,
+    "seen": 1791631483.922605,
+    "ast_hash": "6ed8b628c8a122c41015718339dde942",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1791627407.114121,
+    "seen": 1791631483.922606,
+    "ast_hash": "bd068fab86343b03ef003b5b0a9acafe",
+    "semantic_hash": ""
+  },
+  "ProjectSettings/ProjectVersion.txt": {
+    "mtime": 1790697472.3409524,
+    "seen": 1791631483.9226072,
+    "ast_hash": "4301f2c19351fd7d1b4b72454b6f5697",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1790697472.3414054,
+    "seen": 1791631483.9226072,
+    "ast_hash": "b8e140c5c44c93e35ab1bf75cc5a5766",
+    "semantic_hash": ""
+  },
+  "backend/README.md": {
+    "mtime": 1791642586.456652,
+    "seen": 1791642608.274837,
+    "ast_hash": "fe38311cce7332884fc77b4d13569eb5",
+    "semantic_hash": ""
+  },
+  "backend/docker-compose.yml": {
+    "mtime": 1791642553.0252523,
+    "seen": 1791642608.274837,
+    "ast_hash": "482225589a29c54d6a523268333463b3",
+    "semantic_hash": ""
+  },
+  "backend/requirements-dev.txt": {
+    "mtime": 1791617114.6269605,
+    "seen": 1791631483.9226089,
+    "ast_hash": "66a593887e79937db333b2357dfaacf7",
+    "semantic_hash": ""
+  },
+  "backend/requirements.txt": {
+    "mtime": 1791617114.6270823,
+    "seen": 1791631483.9226098,
+    "ast_hash": "9b415e94dd4f26c7c3650226fd94ef7a",
+    "semantic_hash": ""
+  },
+  "docs/ARCHITECTURE.md": {
+    "mtime": 1790697472.3415775,
+    "seen": 1791631483.922611,
+    "ast_hash": "8d07ba0e22d69050788d1fb815a942df",
+    "semantic_hash": ""
+  },
+  "docs/PROJECT_CONTEXT.md": {
+    "mtime": 1790697472.3416858,
+    "seen": 1791631483.922611,
+    "ast_hash": "f27e40555023f64029be088ddcab5eda",
+    "semantic_hash": ""
+  },
+  "docs/graphify-notes.md": {
+    "mtime": 1791627407.117387,
+    "seen": 1791631483.922612,
+    "ast_hash": "8fd0d921d7075ee48383da7a27521c90",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-0-validation.md": {
+    "mtime": 1790697472.3417761,
+    "seen": 1791631483.922613,
+    "ast_hash": "0db7e165162fe69ef7d892513f88f3e9",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-ar-foundation.md": {
+    "mtime": 1790697472.341844,
+    "seen": 1791631483.922613,
+    "ast_hash": "b223cc91bbf3b87813c1e7c8ca60e407",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-1-project-setup.md": {
+    "mtime": 1790697472.341961,
+    "seen": 1791631483.922614,
+    "ast_hash": "bddc1a77295247d22773f3d11b171a2a",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-2-ar-session-config.md": {
+    "mtime": 1790697472.3420582,
+    "seen": 1791631483.922615,
+    "ast_hash": "e7ae492c634130c16f8cba194f7fe532",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-3-plane-detection.md": {
+    "mtime": 1790697472.342151,
+    "seen": 1791631483.922615,
+    "ast_hash": "26229a69c3a7805b93ad44ee8cd94de1",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-4-object-placement.md": {
+    "mtime": 1790697472.3422282,
+    "seen": 1791631483.922616,
+    "ast_hash": "a909cf1fee311c394fa829420da69047",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-5-object-interaction.md": {
+    "mtime": 1790697472.3423097,
+    "seen": 1791631483.9226172,
+    "ast_hash": "8a75e53407b293bc4b6628eb5ad735ae",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-6-3d-model-loading.md": {
+    "mtime": 1790697472.3423967,
+    "seen": 1791631483.9226172,
+    "ast_hash": "a6881471e1e89209dda46800ed84c674",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-7-basic-ui.md": {
+    "mtime": 1790697472.3424897,
+    "seen": 1791631483.9226182,
+    "ast_hash": "48d408c8d03cbafe8b4b84456361a3bf",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-8-depth-occlusion.md": {
+    "mtime": 1790697472.3425658,
+    "seen": 1791631483.9226189,
+    "ast_hash": "04e723407dff4da46d42975649cb0424",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-1-steps/step-9-testing.md": {
+    "mtime": 1790697472.3426552,
+    "seen": 1791631483.9226189,
+    "ast_hash": "ee6d570da346b7520fcd93cd0c5c9c7c",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-2-database-design.md": {
+    "mtime": 1791617114.627868,
+    "seen": 1791631483.9226198,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-2-product-pipeline.md": {
+    "mtime": 1791630618.7775326,
+    "seen": 1791631483.922621,
+    "ast_hash": "d70e87ec5a9ee19704dab678b530b0bd",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-3-door-detection.md": {
+    "mtime": 1790697472.342851,
+    "seen": 1791631483.922621,
+    "ast_hash": "d181f96e45abc2496b77ae11cd370f32",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-4-door-coordinate-system.md": {
+    "mtime": 1790697472.342936,
+    "seen": 1791631483.922622,
+    "ast_hash": "65b8c12baa688d6adaba51c84f12c426",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-5-measurement.md": {
+    "mtime": 1790697472.343013,
+    "seen": 1791631483.922623,
+    "ast_hash": "ac0a649e4be91c07cb61b2da3b778e4f",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-6-visualization.md": {
+    "mtime": 1790697472.343086,
+    "seen": 1791631483.922623,
+    "ast_hash": "165404080faa3461e788e1223b6aeb61",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-7-compatibility-engine.md": {
+    "mtime": 1790697472.3431892,
+    "seen": 1791631483.922624,
+    "ast_hash": "722b4cdb0c4b09fb23fa59a393e9d01d",
+    "semantic_hash": ""
+  },
+  "docs/phases/phase-8-retailer-dashboard.md": {
+    "mtime": 1790697472.3432615,
+    "seen": 1791631483.922625,
+    "ast_hash": "b49b22cc0b570a85747bef64807404a3",
+    "semantic_hash": ""
+  },
+  "docs/AI_AR_Product_Visualization_Fit_Platform_Startup_Report.pdf": {
+    "mtime": 1790697472.3414826,
+    "seen": 1791631483.922626,
+    "ast_hash": "82002e6be149e7e4246461d23a357de9",
+    "semantic_hash": ""
+  },
+  "docs/Executive Summary.pdf": {
+    "mtime": 1790697472.3416219,
+    "seen": 1791631483.922626,
+    "ast_hash": "7fa33b4a6ce1313614285acf3024befa",
+    "semantic_hash": ""
+  },
+  "Assets/_Project/Scripts/UI/QRScanner.cs": {
+    "mtime": 1791641452.3093052,
+    "seen": 1791641643.666187,
+    "ast_hash": "8b0d055cdb6618a677b918369be7266a",
+    "semantic_hash": ""
+  },
+  "backend/scripts/generate_placeholder_models.py": {
+    "mtime": 1791637385.5393915,
+    "seen": 1791639430.142436,
+    "ast_hash": "82ec8ae0064fb563d8b721c67c55f77a",
+    "semantic_hash": ""
+  },
+  "Assets/Editor/AayamSceneBootstrapper.cs": {
+    "mtime": 1791641550.3167214,
+    "seen": 1791641643.666158,
+    "ast_hash": "02dcfde7ee11356733f3d3463722fca9",
+    "semantic_hash": ""
   }
 }

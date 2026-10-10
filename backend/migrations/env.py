@@ -41,7 +41,7 @@ def get_url() -> str:
             )
     return config.get_main_option(
         "sqlalchemy.url",
-        "postgresql+psycopg2://aayam:aayam_dev_123@localhost:5432/aayam",
+        "postgresql+psycopg2://aayam:aayam_dev_123@localhost:5434/aayam",
     )
 
 

@@ -23,7 +23,9 @@ namespace Aayam.AR.Placement
         [SerializeField] private float _handleHeightMm   = 1000f;
         [SerializeField] private float _lockHeightMm     = 1000f;
         [SerializeField] private float _peepholeHeightMm = 1500f;
-        [SerializeField] private bool  _useHeightSnap    = false;
+        [Tooltip("Now backed by real per-product anchor_y_mm from the backend " +
+                 "(Phase 2 Step 7) - previously off because nothing fed it real data.")]
+        [SerializeField] private bool  _useHeightSnap    = true;
 
         // ─── Core Pose Calculation ────────────────────────────────
 
@@ -53,22 +55,16 @@ namespace Aayam.AR.Placement
         }
 
         /// <summary>
-        /// Snaps the placement height to a standard door hardware position.
-        /// Used when the AR system can't precisely measure door height yet.
-        /// Requires a known floor reference point.
+        /// Snaps the placement height to a specific mm-from-floor value - the
+        /// product's real anchor_y_mm from the backend (Phase 2 Step 7).
+        /// Requires a known floor reference point (see FloorPlaneDetector).
+        /// heightMm &lt; 0 means "no anchor data" - returns placementPose unchanged.
         /// </summary>
-        public Pose SnapToStandardHeight(Pose placementPose, Vector3 floorWorldPos, ProductHeightType heightType)
+        public Pose SnapToStandardHeight(Pose placementPose, Vector3 floorWorldPos, float heightMm)
         {
-            if (!_useHeightSnap) return placementPose;
+            if (!_useHeightSnap || heightMm < 0f) return placementPose;
 
-            float targetHeightM = heightType switch
-            {
-                ProductHeightType.Handle   => _handleHeightMm   * 0.001f,
-                ProductHeightType.Lock     => _lockHeightMm     * 0.001f,
-                ProductHeightType.Peephole => _peepholeHeightMm * 0.001f,
-                _                          => _handleHeightMm   * 0.001f
-            };
-
+            float targetHeightM = heightMm * 0.001f;
             Vector3 snappedPos = new Vector3(
                 placementPose.position.x,
                 floorWorldPos.y + targetHeightM,
@@ -76,6 +72,22 @@ namespace Aayam.AR.Placement
             );
 
             return new Pose(snappedPos, placementPose.rotation);
+        }
+
+        /// <summary>
+        /// Back-compat overload using the three generic inspector-configured
+        /// heights, for callers without a specific product's real anchor_y_mm.
+        /// </summary>
+        public Pose SnapToStandardHeight(Pose placementPose, Vector3 floorWorldPos, ProductHeightType heightType)
+        {
+            float heightMm = heightType switch
+            {
+                ProductHeightType.Handle   => _handleHeightMm,
+                ProductHeightType.Lock     => _lockHeightMm,
+                ProductHeightType.Peephole => _peepholeHeightMm,
+                _                          => _handleHeightMm
+            };
+            return SnapToStandardHeight(placementPose, floorWorldPos, heightMm);
         }
     }
 

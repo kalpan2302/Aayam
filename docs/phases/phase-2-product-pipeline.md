@@ -12,6 +12,12 @@ This phase creates the core product data system and 3D asset pipeline for Aayam.
 
 ## Step 1: Database Schema Design (Week 1)
 
+**Status: ✅ Done (2026-10-10).** Actual implementation exceeds this sketch —
+see `backend/migrations/versions/001-003` for the real schema (12 tables, named
+FKs, CHECK constraints, GIN/trigram/partial/covering indexes, 7 triggers,
+partitioned audit log, views + materialized view). This section's SQL is
+historical/illustrative, not what's deployed.
+
 ### Product Data Model Example (JSON)
 ```json
 {
@@ -177,6 +183,15 @@ VALUES (1, 's3://aayam-assets/models/HANDLE_001.glb', 's3://aayam-assets/thumbna
 
 ## Step 3: AWS S3 Setup (Week 1)
 
+**Status: ✅ Done (2026-10-10) — via local static file serving, not AWS.** To
+avoid any cloud billing during dev, assets are served from the backend itself
+instead: `backend/storage/{models,thumbnails,images,textures}/` mounted at
+`/static` (see `app/storage.py`, `app/main.py`). `model_url`/`thumbnail_url`
+are stored as relative paths (`/static/...`), so migrating to real S3 +
+CloudFront later is a URL-prefix change, not a rewrite. Revisit this section
+(the actual S3/CloudFront plan below) before a retail pilot needs assets
+reachable from outside your own network.
+
 ### S3 Bucket Structure
 ```text
 aayam-assets/
@@ -211,6 +226,15 @@ def upload_model(file_path, category, filename):
 ---
 
 ## Step 4: Backend API (Week 2)
+
+**Status: ✅ Done (2026-10-10).** `app/api/v1/{products,brands,categories}.py`
+wired to the real DB (list/filter/sort/paginate, get by id/sku, create/update/
+soft-delete, all tested — see `backend/tests/`). `app/api/v1/assets.py`'s
+upload endpoint now writes to local storage (Step 3) with extension/path-
+traversal validation. The endpoint list below is illustrative, not literal —
+`/3d-asset` and `/compatibility` aren't separate routes; that data is nested
+in `GET /products/{id}` instead (fewer round trips). `/qr` is still a stub —
+that's Step 6, not this one.
 
 ### FastAPI Setup
 ```python
@@ -296,6 +320,14 @@ Products must be anchored correctly on the detected door plane. Standard mountin
 
 ## Step 8: Create Initial 20 Products
 
+**Status: ✅ Done, with a caveat (2026-10-10).** `scripts/seed_data.py` seeds
+exactly this mix (10 handles, 5 locks, 5 accessories) and has been verified
+working end-to-end — but only against a throwaway test database. **Migrations
+and seed data have not yet been run against the real persistent dev DB**,
+blocked on a port-5432 conflict with another repo's Postgres container on this
+machine. Resolve that, then run `alembic upgrade head` + `python -m
+scripts.seed_data` for real.
+
 **Sourcing:** Gather real specs/prices from Indian hardware brands (Godrej, Yale, Dorset).
 
 1. **10 Handles:**
@@ -308,11 +340,14 @@ Products must be anchored correctly on the detected door plane. Standard mountin
 ---
 
 ## Deliverables
-- [ ] PostgreSQL schema deployed
-- [ ] 20 product records with full metadata
-- [ ] 20 3D models (glTF/GLB) in S3
-- [ ] FastAPI backend with product endpoints
+
+Status as of 2026-10-10 — see per-step notes above for detail/caveats.
+
+- [x] PostgreSQL schema deployed (⚠️ verified in a throwaway test DB only — not yet on the real dev DB)
+- [x] 20 product records with full metadata (⚠️ same caveat as above)
+- [ ] 20 3D models (glTF/GLB) — storage mechanism done (Step 3), no real files yet (Step 2 art work not started)
+- [x] FastAPI backend with product endpoints (asset upload done; QR generation still a stub — Step 6)
 - [ ] Product catalogue UI in app
 - [ ] QR code system working
-- [ ] Anchor point system defined
-- [ ] API documentation
+- [ ] Anchor point system defined (⚠️ data model + API done; Unity placement doesn't apply it yet)
+- [x] API documentation (auto-generated OpenAPI/Swagger at `/docs` — no separate hand-written doc)
