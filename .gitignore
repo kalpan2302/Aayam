@@ -87,12 +87,21 @@ backend/storage/**/*.jpeg
 backend/storage/**/*.webp
 backend/storage/**/*.ktx2
 
+# Phase 3 training data - raw photos/exports, not source. Structure preserved
+# via .gitkeep; this is where real content lives before going to Roboflow.
+datasets/**/*.jpg
+datasets/**/*.jpeg
+datasets/**/*.png
+datasets/**/*.zip
+datasets
+
 # Dashboard
 dashboard/node_modules/
 dashboard/.next/
 dashboard/.env.local
 
-# ML
+# ML - training artifacts, not source. The real model Unity needs is
+# committed separately at Assets/_Project/MLModels/ (not ignored).
 ml/runs/
 ml/weights/
 ml/data/
@@ -100,6 +109,11 @@ ml/*.onnx
 ml/*.pt
 ml/*.tflite
 ml/*.mlmodel
+ml/*.txt
+# Ultralytics writes to runs/ at the repo root by default regardless of the
+# project= override - see docs/phases/phase-3-implementation-plan.md Step 2.
+/runs/
+yolov8n.pt
 
 # General
 *.log

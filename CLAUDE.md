@@ -232,8 +232,10 @@ This is a Unity project.
 Current versions:
 - Unity: `6000.6.3f1` (see `ProjectSettings/ProjectVersion.txt`; editor installed locally at
   `/Applications/Unity/Hub/Editor/6000.6.3f1/Unity.app`)
-- AR Foundation: `6.6.2` + ARKit (iOS-only right now — no ARCore package in
-  `Packages/manifest.json`)
+- AR Foundation: `6.6.2` + ARKit + ARCore (iOS **and** Android both in scope as of
+  2026-10-11 — `com.unity.xr.arcore` and `com.unity.xr.openxr` are in
+  `Packages/manifest.json`; this corrects the earlier "iOS-only" note here, which was
+  stale by the time Phase 3 planning started)
 
 The Unity project is located at the **repository root** (`Assets/`, `Packages/`,
 `ProjectSettings/`). Do not assume there is a separate `unity/` directory.
