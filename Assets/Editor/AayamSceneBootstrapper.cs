@@ -55,6 +55,7 @@ namespace Aayam.Editor
             var ui = BuildUI(systems, baseRig);
             WireQRScanner(baseRig, ui.productSelector);
             WireVisualDoorDetection(baseRig, systems);
+            WireVisualDoorSegmentation(baseRig);
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log("<color=green>[AayamSceneBootstrapper]</color> Done. " +
@@ -459,6 +460,46 @@ namespace Aayam.Editor
 
             Debug.Log($"[AayamSceneBootstrapper] VisualDoorDetector attached to '{rig.CameraGO.name}', " +
                       "DoorConfidenceCoordinator wired, on-screen ML detection label wired.");
+        }
+
+        // ─── Visual Door Segmentation (Phase 3 Step 8) ───────────────────
+
+        private const string DoorHandleSegModelPath = "Assets/_Project/MLModels/DoorHandleSegmenter.onnx";
+
+        private static void WireVisualDoorSegmentation(BaseRig rig)
+        {
+            var modelAsset = AssetDatabase.LoadAssetAtPath<ModelAsset>(DoorHandleSegModelPath);
+            if (modelAsset == null)
+            {
+                Debug.LogWarning($"[AayamSceneBootstrapper] No ModelAsset at '{DoorHandleSegModelPath}' - " +
+                                  "skipping VisualDoorSegmenter wiring. Run Phase 3 Step 8's training/export first.");
+                return;
+            }
+
+            var segmenter = rig.CameraGO.GetComponent<VisualDoorSegmenter>();
+            if (segmenter == null)
+                segmenter = rig.CameraGO.AddComponent<VisualDoorSegmenter>();
+            SetPrivateField(segmenter, "_modelAsset", modelAsset);
+
+            // Canvas-rooted, not Screen_ARScan - same reasoning as the Step 7
+            // ML detection label above (ScreenManager hides non-current screens).
+            var canvasRoot = GameObject.Find(UIRootName);
+            if (canvasRoot != null)
+            {
+                var debugText = FindOrCreateUIText(canvasRoot.transform, "DoorGeometryDebugText", "Geo: no detection");
+                var debugRect = debugText.GetComponent<RectTransform>();
+                debugRect.sizeDelta = new Vector2(600, 80);
+                debugRect.anchoredPosition = new Vector2(0, 600); // below the Step 7 label at y=700
+                debugText.fontSize = 28;
+                debugText.color = Color.yellow;
+
+                var debugLabel = debugText.gameObject.GetComponent<DoorGeometryDebugLabel>();
+                if (debugLabel == null) debugLabel = debugText.gameObject.AddComponent<DoorGeometryDebugLabel>();
+                SetPrivateField(debugLabel, "_segmenter", segmenter);
+            }
+
+            Debug.Log($"[AayamSceneBootstrapper] VisualDoorSegmenter attached to '{rig.CameraGO.name}', " +
+                      "on-screen geometry debug label wired.");
         }
 
         // ─── Generic Helpers ────────────────────────────────────────────

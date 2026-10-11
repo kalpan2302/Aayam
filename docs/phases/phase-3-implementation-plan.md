@@ -346,14 +346,117 @@ and fixing a real bug the tooling immediately surfaced:
 
 ---
 
-## Step 8: Door Boundary Extraction (Deferred)
+## Step 8: Door Boundary Extraction
 
-The roadmap doc's Step 3 (segmentation) and Step 6 (boundary/corner
-extraction) are **out of scope for the Phase 3 MVP** described above — they
-require polygon/mask annotations (more expensive than box annotations) and
-assume the box-detection pipeline above is already proven. Revisit only after
-Steps 1–7 are working and validated on-device; don't build segmentation on
-top of an unvalidated detector.
+Originally deferred here as out of scope for the MVP (required polygon/mask
+annotations, more expensive than box annotations, and assumed box-detection
+was proven first). Started 2026-10-11 at Kalpan's direction, ahead of Step 7's
+latency gap being fully closed — noted as a deliberate sequencing override,
+not a plan change.
+
+**Segmentation training: ✅ done, real metrics (2026-10-11).** No
+polygon-annotated dataset existed, so one was generated rather than
+hand-labeled:
+
+1. **Box-to-mask promotion via SAM** (`ultralytics.data.annotator` pattern,
+   custom script): fed the *existing* ground-truth box labels (not
+   re-detected boxes) to `SAM('sam_b.pt')` as prompts, across all 1334
+   images (train/valid/test). ~50 min, backgrounded.
+2. **Quality check — two failure modes found and one false start on
+   filtering them.** Visual inspection found real SAM failures: a
+   person standing in front of a door caused the mask to bleed into their
+   silhouette; a glass-paned door's reflections produced jagged noise.
+   Tried an automated geometric filter (vertex count + bounding-box fill
+   ratio after `cv2.approxPolyDP` simplification, matching the roadmap
+   doc's own Step 3 method) to drop bad masks — **the filter didn't
+   correlate with actual quality** (a wrong-content blob simplified to
+   *fewer* points than a correct door at a steep angle, which has a low
+   fill ratio from perspective alone, nothing to do with correctness).
+   Abandoned automated filtering; kept all masks except degenerate
+   (<3-point) cases, and let validation mAP be the real signal instead of a
+   proxy metric.
+3. **Trained `yolov8n-seg`** on the result (`ml/train_door_handle_seg.py`,
+   same local MPS approach as the box detector). Lands at
+   `runs/segment/ml/runs/door_handle_seg_v1/` — note the extra nesting vs.
+   the box detector's `ml/runs/door_handle_v1/`; `project="ml/runs"`
+   resolved differently for the segment task than it did for detect, a
+   quirk not yet root-caused, harmless but worth knowing when looking for
+   the weights.
+4. **Interrupted once, resumed cleanly.** First attempt died at epoch 24/100
+   when its monitoring process was stopped (architecture mistake: training
+   was launched as that monitor's direct child, so stopping the monitor
+   killed it). Recovered via `model.train(resume=True)` from the epoch-24
+   `last.pt` checkpoint — training continued from there, not from scratch.
+   Second attempt was launched fully detached with only a polling watcher
+   (never a process owner) specifically so this can't happen again.
+5. **Final result, epoch 100/100: box mAP50 = 0.877, mask mAP50 = 0.824.**
+   Both clear the plan's 0.70 target; box mAP50 even exceeds the roadmap
+   doc's "full-scope" 0.85 target. This held despite the known mask noise
+   from step 2 — the noise didn't visibly hurt final accuracy at this
+   dataset size.
+
+**ONNX export: ✅ done and verified offline (2026-10-12).**
+`model.export(format="onnx", imgsz=640)` → 13.2MB, outputs
+`(1,38,8400)` detection head + `(1,32,160,160)` mask prototypes (the
+standard YOLOv8-seg ONNX shape — more complex than the box detector's single
+`(1,6,8400)` output; `VisualDoorDetector.PostProcess` does not yet handle
+this format, see below). Verified against two different real photos of
+Kalpan's actual door(s), not synthetic data:
+- Photo 1 (straight-on): door 0.85, handle 0.85, both masks visually tight
+  and correctly follow the real silhouette (door mask even correctly
+  excludes the frame where it intrudes top-right and bottom-left).
+- Photo 2 (angled hallway shot, two doors visible): both doors (0.73, 0.68)
+  and two of three handles (0.84, 0.54) detected correctly, masks clean.
+
+**Geometry extraction + on-device Sentis integration: ✅ done and verified
+on-device (2026-10-12).** New code, none of it existed before today:
+
+- `DoorGeometryExtractor.cs` — pure C# (no OpenCV in Unity): Moore-neighbor
+  contour tracing + hand-rolled Douglas-Peucker simplification + corner
+  ordering + handle-side heuristic, mirroring the roadmap doc's Step 6
+  pseudocode. Unit-tested against synthetic masks first (clean rect, skewed
+  quad, degenerate triangle, empty mask) before trusting it on real model
+  output - caught and fixed a real off-by-one in the contour-closing check
+  this way (Moore tracing stops exactly 1px short of closure; the dedup
+  check used `<1f`, missing the exact-1.0 case).
+- `VisualDoorSegmenter.cs` — loads the seg ONNX via Sentis, decodes the
+  two-output YOLOv8-seg format (box+class+32 mask coefficients per anchor,
+  plus the 32×160×160 prototype tensor), builds each detection's mask via
+  `sigmoid(coeffs · prototypes)` cropped to its box, and feeds the result to
+  `DoorGeometryExtractor`.
+- **Two real bugs found and fixed via Editor-side testing against actual
+  model output, before ever touching the device:**
+  1. 160×160 prototype resolution is too coarse for clean 4-vertex
+     simplification on its own - fixed by computing the probability map at
+     native resolution, then **bilinear**-upsampling it before
+     thresholding (nearest-neighbor on an already-binary mask doesn't help,
+     verified: scaling 4x nearest still gave 9 vertices, since it just
+     scales the same staircase up proportionally rather than smoothing it).
+  2. Resizing to a square target was wrong regardless of resolution (160
+     through 1280, all gave 7 vertices) - the real fix was resizing to the
+     camera frame's true **aspect ratio**, not a fixed square, since the
+     square 640×640 model input squashes a non-square portrait frame and
+     that distortion stays baked into a square output mask. Confirmed via a
+     direct Python comparison: Ultralytics' own 640×640 square mask gave
+     the same 7 vertices; only resizing to the true non-square original
+     dimensions gave 4 - down to a tiny 95×160, so it's about ratio, not
+     pixel count. Also needed a larger simplification epsilon (4%, not the
+     roadmap's/box-detector's 2%) - verified via OpenCV on the exact same
+     mask bytes that this wasn't a tracer bug: real door masks have a
+     legitimate small bump where the handle protrudes past the door's flat
+     silhouette, which 2% doesn't smooth away.
+- **On-device result** (screenshot, real door, phone held by Kalpan):
+  `Geo: 178x495px handle=left conf=0.41` - genuinely difficult case (door
+  mostly covered by hanging clothes), model still found a plausible
+  door+handle read. No crashes, no exceptions in the device console beyond
+  the same pre-existing harmless ones already known from Step 7.
+- Added `DoorGeometryDebugLabel.cs` (Canvas-rooted, same reasoning as the
+  Step 7 label) to show this on-screen without needing a USB tether.
+
+**Still not done:** this only reports a single door's dimensions/handle-side
+as text - nothing actually *uses* the geometry yet (no world-space anchor
+refinement, no visual box/outline overlay). That's further-out work, not
+started.
 
 ---
 
@@ -372,8 +475,10 @@ top of an unvalidated detector.
 
 ## Status
 
-**Steps 1–6 done, Step 7 accuracy confirmed / latency still failing, Step 8
-deliberately deferred (last updated 2026-10-11).** Dataset trained, exported,
+**Steps 1–6 done, Step 7 accuracy confirmed / latency ~53ms (just above the
+50ms budget, down from 72ms), Step 8 trained + exported + on-device verified
+(last updated 2026-10-12, overriding the earlier "deferred" sequencing at
+Kalpan's direction).** Dataset trained, exported,
 integrated, and combined with the existing heuristic (see each step section
 above for dates/evidence).
 
@@ -385,18 +490,45 @@ Step 7, the two halves:
   door. Fixed; on-screen label now reads correct door/handle detections with
   confidence (0.85 / 0.63) on the actual device. See the Step 7 section above
   for the full root-cause chain and evidence.
-- **Latency: ❌ failing the <50ms budget, and worse than before the rotation
-  fix.** Re-measured on-device after the fix: **avg 72.1ms / 71.9ms, max up
-  to 99.9ms** across two 30-frame windows (was ~63ms avg before). The
-  `RotateRgba90Clockwise` CPU byte-array copy costs roughly +9ms per
-  inference — expected, since correctness came first and this was never
-  optimized. Not yet investigated: `GPUCompute` vs `CPU` backend, whether the
-  ONNX export is actually `int8`-quantized (evidence suggests it isn't — the
-  bundled file is byte-identical to the unquantized `best.onnx` export, not a
-  separate smaller quantized artifact), or moving the rotation to a GPU blit
-  instead of a CPU loop (the obvious next win, since it would recover the
-  ~9ms the correctness fix just cost).
+- **Latency: ⚠️ much closer to budget, not fully closed.** Timeline:
+  pre-rotation-fix ~63ms avg → post-rotation-fix (GPUCompute) 72.1ms/71.9ms
+  avg, max ~100ms → **switched to `BackendType.CPU`, re-measured on-device:
+  avg settled to 52.9ms, max 53.7ms** after a brief warmup (first window
+  66.6ms as the backend spun up, then 65.4 → 60.4 → 52.9ms). CPU backend is
+  both faster *and* far more consistent than GPUCompute for this model shape
+  on this chip (GPUCompute's max never dropped below ~90ms across any
+  window) — counter-intuitive, confirmed by measurement rather than assumed,
+  and now the `VisualDoorDetector._backendType` default (was GPUCompute).
+  Accuracy re-verified unaffected by the backend switch (screenshot: "ML:
+  Handle 0.64 | Door 0.56" on the real door, different angle).
 
-Phase 3 is **not complete** until latency is closed or explicitly re-scoped.
-Step 8 (boundary extraction) stays out of scope by design per this plan's
-own MVP cut, not an oversight.
+  **`int8` quantization: tried and rejected, not just untried.** Dynamic
+  quantization (`onnxruntime.quantization.quantize_dynamic`) produces
+  `DynamicQuantizeLinear`/`ConvInteger` ops that Sentis's ONNX importer
+  outright rejects (`OnnxImportException`). Static QDQ quantization (proper
+  recipe: `quant_pre_process` + 100 real calibration images from
+  `datasets/train/images/` + the recommended `QUInt8`/non-per-channel
+  settings) loads fine but **collapses to zero detections** on the same test
+  photo that detects correctly unquantized — the YOLOv8 detection head is
+  evidently too sensitive to naive full-graph activation quantization to fix
+  within reasonable effort here. Not pursuing further (would need per-node
+  quantization exclusion for the detection head, a materially bigger task).
+
+  Still open if ~53ms isn't good enough: move `RotateRgba90Clockwise` to a
+  GPU blit (Sentis's own `TextureTransform` has no rotation support, checked
+  directly against its source — would need a custom shader, not a built-in
+  option).
+
+Phase 3 is close to complete:
+- Box detection (Steps 1–6): done.
+- Step 7 accuracy: confirmed on real hardware. Latency: 72ms → ~53ms via a
+  measured backend switch, still ~3ms over the 50ms budget (needs a GPU-blit
+  shader to close further, not yet attempted).
+- Step 8 (segmentation + geometry extraction): trained (box mAP50=0.877,
+  mask mAP50=0.824), exported, and verified on-device
+  (`Geo: 178x495px handle=left conf=0.41` on a real door). The geometry is
+  extracted but not yet *used* for anything (no world-space anchor
+  refinement, no visual overlay) — that's further-out work, not started.
+- Android: completely untested — no build, install, or verification has
+  touched Android at any point this phase, despite being in scope per the
+  plan.

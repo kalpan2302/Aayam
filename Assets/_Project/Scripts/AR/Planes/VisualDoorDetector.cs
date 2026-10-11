@@ -37,6 +37,8 @@ namespace Aayam.AR.Planes
 
         [Header("Model")]
         [SerializeField] private ModelAsset _modelAsset;
+        [Tooltip("CPU confirmed faster AND far more stable than GPUCompute for this model shape on this device - Phase 3 Step 7, 2026-10-11: GPUCompute avg 72ms/max ~100ms vs CPU avg settling ~53-60ms/max ~53-69ms after warmup. Counter-intuitive but measured, not assumed.")]
+        [SerializeField] private BackendType _backendType = BackendType.CPU;
 
         [Header("Scanning")]
         [Tooltip("Run inference every N camera frames - matches QRScanner's throttle pattern.")]
@@ -76,7 +78,7 @@ namespace Aayam.AR.Planes
             }
 
             var model = ModelLoader.Load(_modelAsset);
-            _worker = new Worker(model, BackendType.GPUCompute);
+            _worker = new Worker(model, _backendType);
             _frameCounter = 0;
 
             if (_cameraManager != null)
