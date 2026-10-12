@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using Unity.XR.CoreUtils;
 
+using Unity.InferenceEngine;
+
 using Aayam.AR.Core;
 using Aayam.AR.Planes;
 using Aayam.AR.Placement;
@@ -52,6 +54,8 @@ namespace Aayam.Editor
             var systems = BuildPlacementSystems(baseRig);
             var ui = BuildUI(systems, baseRig);
             WireQRScanner(baseRig, ui.productSelector);
+            WireVisualDoorDetection(baseRig, systems);
+            WireVisualDoorSegmentation(baseRig);
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log("<color=green>[AayamSceneBootstrapper]</color> Done. " +
@@ -147,7 +151,7 @@ namespace Aayam.Editor
         {
             public DoorCandidateDetector DoorDetector;
             public ObjectPlacementController PlacementController;
-            public ModelLoader ModelLoaderInstance;
+            public Aayam.Services.ModelLoader ModelLoaderInstance;
             public ModelInstanceManager ModelInstanceManagerInstance;
         }
 
@@ -184,7 +188,7 @@ namespace Aayam.Editor
             SetPrivateField(placementController, "_floorDetector", floorDetector);
 
             var modelCache = FindOrAddComponent<ModelCache>(root, "ModelCache");
-            var modelLoader = FindOrAddComponent<ModelLoader>(root, "ModelLoader");
+            var modelLoader = FindOrAddComponent<Aayam.Services.ModelLoader>(root, "ModelLoader");
             SetPrivateField(modelLoader, "_modelCache", modelCache);
             var modelInstanceManager = FindOrAddComponent<ModelInstanceManager>(root, "ModelInstanceManager");
 
@@ -290,6 +294,19 @@ namespace Aayam.Editor
             // --- ProductSelector, under the ProductBrowser screen ---
             var browserRoot = screenRoots[AppScreen.ProductBrowser];
             var contentContainer = FindOrCreateFullStretchChild(browserRoot.transform, "CardContent");
+            // Confine to a bottom tray, not the full screen - ProductSelector's own
+            // doc comment calls this "a tray at the bottom of the AR HUD". Left
+            // full-stretch (the FindOrCreateFullStretchChild default), the
+            // HorizontalLayoutGroup's childControlHeight below stretches every card
+            // to full screen height instead of its intended 220x280, which renders
+            // as thin vertical bars with text pushed down near the real screen edge.
+            var contentRect = contentContainer.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 0);
+            contentRect.anchorMax = new Vector2(1, 0);
+            contentRect.pivot = new Vector2(0.5f, 0);
+            contentRect.sizeDelta = new Vector2(0, 300);
+            contentRect.anchoredPosition = new Vector2(0, 20);
+
             var layout = contentContainer.GetComponent<HorizontalLayoutGroup>();
             if (layout == null)
             {
@@ -386,6 +403,103 @@ namespace Aayam.Editor
                 scanner = rig.CameraGO.AddComponent<QRScanner>();
             SetPrivateField(scanner, "_productSelector", productSelector);
             Debug.Log($"[AayamSceneBootstrapper] QRScanner attached to '{rig.CameraGO.name}' (the real AR camera).");
+        }
+
+        // ─── Visual Door Detection (Phase 3) ─────────────────────────────
+
+        private const string DoorHandleModelPath = "Assets/_Project/MLModels/DoorHandleDetector.onnx";
+
+        private static void WireVisualDoorDetection(BaseRig rig, Systems systems)
+        {
+            var modelAsset = AssetDatabase.LoadAssetAtPath<ModelAsset>(DoorHandleModelPath);
+            if (modelAsset == null)
+            {
+                Debug.LogWarning($"[AayamSceneBootstrapper] No ModelAsset at '{DoorHandleModelPath}' - " +
+                                  "skipping VisualDoorDetector wiring. Run Phase 3 Step 1-4 first.");
+                return;
+            }
+
+            var visualDetector = rig.CameraGO.GetComponent<VisualDoorDetector>();
+            if (visualDetector == null)
+                visualDetector = rig.CameraGO.AddComponent<VisualDoorDetector>();
+            SetPrivateField(visualDetector, "_modelAsset", modelAsset);
+
+            var root = FindOrCreateRoot(RootName);
+            var coordinator = FindOrAddComponent<DoorConfidenceCoordinator>(root, "DoorConfidenceCoordinator");
+            SetPrivateField(coordinator, "_geometricDetector", systems.DoorDetector);
+            SetPrivateField(coordinator, "_visualDetector", visualDetector);
+
+            // Step 7 accuracy check has no way to verify without this - latency
+            // was logged, but nothing showed what the model actually detected.
+            // Parented to the Canvas root, NOT Screen_ARScan: ScreenManager.Start()
+            // deactivates every screen except _initialScreen (ProductBrowser here),
+            // so anything living inside Screen_ARScan is hidden until the user
+            // navigates there - confirmed live on-device 2026-10-11 (StatusText,
+            // also a Screen_ARScan child, was equally invisible). Canvas-rooted
+            // means it shows regardless of which screen is current, same as the
+            // AR camera background and PlacementReticle already do.
+            var canvasRoot = GameObject.Find(UIRootName);
+            if (canvasRoot != null)
+            {
+                // Clean up the stale copy from the first (wrong) attempt, which
+                // lived under Screen_ARScan and is now orphaned dead weight.
+                var staleCopy = GameObject.Find("Screen_" + AppScreen.ARScan)?.transform.Find("MLDetectionDebugText");
+                if (staleCopy != null) Object.DestroyImmediate(staleCopy.gameObject);
+
+                var debugText = FindOrCreateUIText(canvasRoot.transform, "MLDetectionDebugText", "ML: no detection");
+                var debugRect = debugText.GetComponent<RectTransform>();
+                debugRect.sizeDelta = new Vector2(600, 80);
+                debugRect.anchoredPosition = new Vector2(0, 700);
+                debugText.fontSize = 28;
+                debugText.color = Color.cyan;
+
+                var debugLabel = debugText.gameObject.GetComponent<VisualDetectionDebugLabel>();
+                if (debugLabel == null) debugLabel = debugText.gameObject.AddComponent<VisualDetectionDebugLabel>();
+                SetPrivateField(debugLabel, "_visualDetector", visualDetector);
+            }
+
+            Debug.Log($"[AayamSceneBootstrapper] VisualDoorDetector attached to '{rig.CameraGO.name}', " +
+                      "DoorConfidenceCoordinator wired, on-screen ML detection label wired.");
+        }
+
+        // ─── Visual Door Segmentation (Phase 3 Step 8) ───────────────────
+
+        private const string DoorHandleSegModelPath = "Assets/_Project/MLModels/DoorHandleSegmenter.onnx";
+
+        private static void WireVisualDoorSegmentation(BaseRig rig)
+        {
+            var modelAsset = AssetDatabase.LoadAssetAtPath<ModelAsset>(DoorHandleSegModelPath);
+            if (modelAsset == null)
+            {
+                Debug.LogWarning($"[AayamSceneBootstrapper] No ModelAsset at '{DoorHandleSegModelPath}' - " +
+                                  "skipping VisualDoorSegmenter wiring. Run Phase 3 Step 8's training/export first.");
+                return;
+            }
+
+            var segmenter = rig.CameraGO.GetComponent<VisualDoorSegmenter>();
+            if (segmenter == null)
+                segmenter = rig.CameraGO.AddComponent<VisualDoorSegmenter>();
+            SetPrivateField(segmenter, "_modelAsset", modelAsset);
+
+            // Canvas-rooted, not Screen_ARScan - same reasoning as the Step 7
+            // ML detection label above (ScreenManager hides non-current screens).
+            var canvasRoot = GameObject.Find(UIRootName);
+            if (canvasRoot != null)
+            {
+                var debugText = FindOrCreateUIText(canvasRoot.transform, "DoorGeometryDebugText", "Geo: no detection");
+                var debugRect = debugText.GetComponent<RectTransform>();
+                debugRect.sizeDelta = new Vector2(600, 80);
+                debugRect.anchoredPosition = new Vector2(0, 600); // below the Step 7 label at y=700
+                debugText.fontSize = 28;
+                debugText.color = Color.yellow;
+
+                var debugLabel = debugText.gameObject.GetComponent<DoorGeometryDebugLabel>();
+                if (debugLabel == null) debugLabel = debugText.gameObject.AddComponent<DoorGeometryDebugLabel>();
+                SetPrivateField(debugLabel, "_segmenter", segmenter);
+            }
+
+            Debug.Log($"[AayamSceneBootstrapper] VisualDoorSegmenter attached to '{rig.CameraGO.name}', " +
+                      "on-screen geometry debug label wired.");
         }
 
         // ─── Generic Helpers ────────────────────────────────────────────

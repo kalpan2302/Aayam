@@ -6,7 +6,8 @@
         "Unity.XR.ARFoundation",
         "Unity.XR.ARSubsystems",
         "Unity.XR.Management",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.InferenceEngine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

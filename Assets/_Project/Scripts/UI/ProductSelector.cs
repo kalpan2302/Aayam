@@ -16,9 +16,9 @@ namespace Aayam.UI
         public string   ProductId;
         public string   Name;
         public string   Brand;
-        public string   PriceFormatted;    // e.g. "â‚¹1,499"
+        public string   PriceFormatted;    // e.g. "₹1,499"
         public Sprite   Thumbnail;
-        public string   CompatibilityLabel; // "âœ“ Fits your door" / "Check required"
+        public string   CompatibilityLabel; // "✓ Fits your door" / "Check required"
         public Color    CompatibilityColor;
 
         // Design-time override: assign a prefab in the Inspector to skip the
@@ -236,11 +236,11 @@ namespace Aayam.UI
         {
             var stubs = new List<ProductUIItem>
             {
-                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", PriceFormatted = "â‚¹1,499", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", PriceFormatted = "â‚¹2,299", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   PriceFormatted = "â‚¹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
-                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", PriceFormatted = "â‚¹3,799", CompatibilityLabel = "âœ“ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   PriceFormatted = "â‚¹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
+                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", PriceFormatted = "₹1,499", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", PriceFormatted = "₹2,299", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   PriceFormatted = "₹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
+                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", PriceFormatted = "₹3,799", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   PriceFormatted = "₹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
             };
 
             Populate(stubs);
