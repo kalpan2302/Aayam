@@ -35,7 +35,22 @@ namespace Aayam.AR.Planes
             public Vector2 TopLeft, TopRight, BottomRight, BottomLeft;
             public float WidthPx, HeightPx;
             public bool IsLeftHandled;
+            public bool HandleFound;
             public Vector2 EstimatedHandlePos;
+
+            /// <summary>
+            /// Handle position as a (u, v) fraction within the door quad -
+            /// u=0 at the left edge, u=1 at the right edge, v=0 at top,
+            /// v=1 at bottom. Scale-and-shape-independent (no pixel/mm
+            /// units), computed from the actual detected handle position
+            /// when available, otherwise a 10%-in-from-the-appropriate-edge
+            /// fallback. This - not EstimatedHandlePos, which is in mask
+            /// pixel space - is what world-space placement should use: a
+            /// consumer multiplies it against the real door plane's own
+            /// width/height (meters), sidestepping any camera-image-to-
+            /// screen-to-world mapping entirely.
+            /// </summary>
+            public Vector2 HandleNormalized;
         }
 
         /// <summary>
@@ -59,10 +74,21 @@ namespace Aayam.AR.Planes
             float doorCenterX = (tl.x + tr.x + bl.x + br.x) / 4f;
             bool isLeftHandled = handleCenter.HasValue && handleCenter.Value.x < doorCenterX;
 
-            float fracX = isLeftHandled ? 0.1f : 0.9f;
-            Vector2 estHandlePos = new Vector2(
-                tl.x + fracX * (tr.x - tl.x),
-                tl.y + 0.5f * (bl.y - tl.y));
+            Vector2 handleNormalized;
+            Vector2 estHandlePos;
+            if (handleCenter.HasValue)
+            {
+                handleNormalized = ComputeNormalizedPosition(handleCenter.Value, tl, tr, bl, br);
+                estHandlePos = handleCenter.Value;
+            }
+            else
+            {
+                float fracX = isLeftHandled ? 0.1f : 0.9f;
+                handleNormalized = new Vector2(fracX, 0.5f);
+                estHandlePos = new Vector2(
+                    tl.x + fracX * (tr.x - tl.x),
+                    tl.y + 0.5f * (bl.y - tl.y));
+            }
 
             return new DoorGeometry
             {
@@ -70,8 +96,40 @@ namespace Aayam.AR.Planes
                 TopLeft = tl, TopRight = tr, BottomRight = br, BottomLeft = bl,
                 WidthPx = width, HeightPx = height,
                 IsLeftHandled = isLeftHandled,
+                HandleFound = handleCenter.HasValue,
                 EstimatedHandlePos = estHandlePos,
+                HandleNormalized = handleNormalized,
             };
+        }
+
+        /// <summary>
+        /// Approximate inverse-bilinear mapping: finds (u,v) such that
+        /// bilinear-interpolating the door's 4 corners at (u,v) lands near
+        /// p. Projects p onto the left and right edges to estimate v, then
+        /// onto the edge interpolated at that v to estimate u - a standard,
+        /// robust approximation for near-trapezoidal quads (real door
+        /// photos under normal perspective), not an exact general-quad
+        /// solve.
+        /// </summary>
+        private static Vector2 ComputeNormalizedPosition(Vector2 p, Vector2 tl, Vector2 tr, Vector2 bl, Vector2 br)
+        {
+            float vLeft = ProjectFraction(p, tl, bl);
+            float vRight = ProjectFraction(p, tr, br);
+            float v = Mathf.Clamp01((vLeft + vRight) * 0.5f);
+
+            Vector2 edgeLeft = Vector2.Lerp(tl, bl, v);
+            Vector2 edgeRight = Vector2.Lerp(tr, br, v);
+            float u = Mathf.Clamp01(ProjectFraction(p, edgeLeft, edgeRight));
+
+            return new Vector2(u, v);
+        }
+
+        private static float ProjectFraction(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float lenSq = ab.sqrMagnitude;
+            if (lenSq < 0.0001f) return 0f;
+            return Vector2.Dot(p - a, ab) / lenSq;
         }
 
         // ─── Contour tracing (Moore-neighbor) ────────────────────────

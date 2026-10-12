@@ -36,6 +36,30 @@ namespace Aayam.AR.Planes
             public float WidthPx, HeightPx;
             public bool IsLeftHandled;
             public bool HandleFound;
+
+            /// <summary>Handle position as a (u,v) fraction within the door
+            /// quad (u: left=0..right=1, v: top=0..bottom=1) - scale- and
+            /// shape-independent. See DoorGeometryExtractor.DoorGeometry.</summary>
+            public Vector2 HandleNormalized;
+
+            // ─── Phase 4 Step 1, Option B: everything DoorPnPWorldAnchor
+            // needs to recover world-space pose, captured/computed at the
+            // SAME frame as the corners above - not re-read later, which is
+            // the exact timing gap that undermined Phase 3's
+            // HandleWorldAnchorRefiner verification.
+
+            /// <summary>Door corners in mask-space pixels (MaskWidth x MaskHeight), same order DoorGeometryExtractor returns: TL,TR,BR,BL.</summary>
+            public Vector2 TopLeftPx, TopRightPx, BottomRightPx, BottomLeftPx;
+            public int MaskWidth, MaskHeight;
+
+            public bool HasCameraPose;
+            public Vector3 CameraPositionAtCapture;
+            public Quaternion CameraRotationAtCapture;
+
+            /// <summary>Raw (pre-rotation) camera intrinsics and resolution, captured synchronously in OnCameraFrameReceived.</summary>
+            public bool HasIntrinsics;
+            public float RawFx, RawFy, RawCx, RawCy;
+            public int RawWidth, RawHeight;
         }
 
         [Header("Model")]
@@ -105,6 +129,14 @@ namespace Aayam.AR.Planes
             if (!_cameraManager.TryAcquireLatestCpuImage(out XRCpuImage image))
                 return;
 
+            // Captured synchronously, same instant as the frame used for
+            // inference below - NOT re-read after the async inference
+            // completes, which is the timing gap Phase 3's
+            // HandleWorldAnchorRefiner verification got burned by.
+            bool hasIntrinsics = _cameraManager.TryGetIntrinsics(out var intrinsics);
+            Vector3 cameraPositionAtCapture = transform.position;
+            Quaternion cameraRotationAtCapture = transform.rotation;
+
             int width, height;
             byte[] rgba;
             using (image)
@@ -130,6 +162,7 @@ namespace Aayam.AR.Planes
                 }
             }
 
+            int rawWidth = width, rawHeight = height;
             rgba = RotateRgba90Clockwise(rgba, width, height, out int rotatedWidth, out int rotatedHeight);
             width = rotatedWidth;
             height = rotatedHeight;
@@ -142,7 +175,32 @@ namespace Aayam.AR.Planes
             _frameTexture.LoadRawTextureData(rgba);
             _frameTexture.Apply();
 
-            _ = RunInferenceAsync(_frameTexture, width, height);
+            var capture = new CaptureContext
+            {
+                HasCameraPose = true,
+                CameraPosition = cameraPositionAtCapture,
+                CameraRotation = cameraRotationAtCapture,
+                HasIntrinsics = hasIntrinsics,
+                RawFx = intrinsics.focalLength.x,
+                RawFy = intrinsics.focalLength.y,
+                RawCx = intrinsics.principalPoint.x,
+                RawCy = intrinsics.principalPoint.y,
+                RawWidth = rawWidth,
+                RawHeight = rawHeight,
+            };
+
+            _ = RunInferenceAsync(_frameTexture, width, height, capture);
+        }
+
+        /// <summary>Everything about the source frame that OnDoorGeometry's consumers need but the inference pipeline itself doesn't - captured once, synchronously, and threaded through unchanged.</summary>
+        private struct CaptureContext
+        {
+            public bool HasCameraPose;
+            public Vector3 CameraPosition;
+            public Quaternion CameraRotation;
+            public bool HasIntrinsics;
+            public float RawFx, RawFy, RawCx, RawCy;
+            public int RawWidth, RawHeight;
         }
 
         private static byte[] RotateRgba90Clockwise(byte[] src, int width, int height, out int newWidth, out int newHeight)
@@ -171,7 +229,7 @@ namespace Aayam.AR.Planes
 
         // ─── Inference ────────────────────────────────────────────
 
-        private async System.Threading.Tasks.Task RunInferenceAsync(Texture2D texture, int srcWidth, int srcHeight)
+        private async System.Threading.Tasks.Task RunInferenceAsync(Texture2D texture, int srcWidth, int srcHeight, CaptureContext capture)
         {
             _isInferring = true;
             Tensor<float> inputTensor = null;
@@ -187,7 +245,7 @@ namespace Aayam.AR.Planes
                 using var detCpu = await detOutput.ReadbackAndCloneAsync();
                 using var protoCpu = await protoOutput.ReadbackAndCloneAsync();
 
-                var result = PostProcess(detCpu, protoCpu, srcWidth, srcHeight);
+                var result = PostProcess(detCpu, protoCpu, srcWidth, srcHeight, capture);
                 if (result.HasValue)
                     OnDoorGeometry?.Invoke(result.Value);
             }
@@ -212,7 +270,7 @@ namespace Aayam.AR.Planes
             public float[] MaskCoeffs;
         }
 
-        private DoorResult? PostProcess(Tensor<float> det, Tensor<float> proto, int srcWidth, int srcHeight)
+        private DoorResult? PostProcess(Tensor<float> det, Tensor<float> proto, int srcWidth, int srcHeight, CaptureContext capture)
         {
             var detData = det.DownloadToArray(); // (38, 8400) flattened, channel-major
             var candidates = new System.Collections.Generic.List<Candidate>();
@@ -295,6 +353,23 @@ namespace Aayam.AR.Planes
                 HeightPx = geo.HeightPx,
                 IsLeftHandled = geo.IsLeftHandled,
                 HandleFound = bestHandle != null,
+                HandleNormalized = geo.HandleNormalized,
+                TopLeftPx = geo.TopLeft,
+                TopRightPx = geo.TopRight,
+                BottomRightPx = geo.BottomRight,
+                BottomLeftPx = geo.BottomLeft,
+                MaskWidth = targetMaskWidth,
+                MaskHeight = targetMaskHeight,
+                HasCameraPose = capture.HasCameraPose,
+                CameraPositionAtCapture = capture.CameraPosition,
+                CameraRotationAtCapture = capture.CameraRotation,
+                HasIntrinsics = capture.HasIntrinsics,
+                RawFx = capture.RawFx,
+                RawFy = capture.RawFy,
+                RawCx = capture.RawCx,
+                RawCy = capture.RawCy,
+                RawWidth = capture.RawWidth,
+                RawHeight = capture.RawHeight,
             };
         }
 

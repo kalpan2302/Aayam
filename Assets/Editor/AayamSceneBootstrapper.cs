@@ -55,7 +55,9 @@ namespace Aayam.Editor
             var ui = BuildUI(systems, baseRig);
             WireQRScanner(baseRig, ui.productSelector);
             WireVisualDoorDetection(baseRig, systems);
-            WireVisualDoorSegmentation(baseRig);
+            WireVisualDoorSegmentation(baseRig, systems);
+            WireDoorPlaneStabilityLogger(baseRig, systems);
+            WireDoorPnPWorldAnchor(baseRig, systems);
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log("<color=green>[AayamSceneBootstrapper]</color> Done. " +
@@ -466,7 +468,7 @@ namespace Aayam.Editor
 
         private const string DoorHandleSegModelPath = "Assets/_Project/MLModels/DoorHandleSegmenter.onnx";
 
-        private static void WireVisualDoorSegmentation(BaseRig rig)
+        private static void WireVisualDoorSegmentation(BaseRig rig, Systems systems)
         {
             var modelAsset = AssetDatabase.LoadAssetAtPath<ModelAsset>(DoorHandleSegModelPath);
             if (modelAsset == null)
@@ -498,8 +500,66 @@ namespace Aayam.Editor
                 SetPrivateField(debugLabel, "_segmenter", segmenter);
             }
 
+            var refiner = rig.CameraGO.GetComponent<HandleWorldAnchorRefiner>();
+            if (refiner == null) refiner = rig.CameraGO.AddComponent<HandleWorldAnchorRefiner>();
+            SetPrivateField(refiner, "_geometricDetector", systems.DoorDetector);
+            SetPrivateField(refiner, "_segmenter", segmenter);
+
             Debug.Log($"[AayamSceneBootstrapper] VisualDoorSegmenter attached to '{rig.CameraGO.name}', " +
-                      "on-screen geometry debug label wired.");
+                      "on-screen geometry debug label wired, HandleWorldAnchorRefiner wired.");
+        }
+
+        // ─── Door Plane Stability Logger (Phase 4 diagnostic) ────────────
+
+        private static void WireDoorPlaneStabilityLogger(BaseRig rig, Systems systems)
+        {
+            var logger = rig.CameraGO.GetComponent<DoorPlaneStabilityLogger>();
+            if (logger == null) logger = rig.CameraGO.AddComponent<DoorPlaneStabilityLogger>();
+            SetPrivateField(logger, "_geometricDetector", systems.DoorDetector);
+
+            Debug.Log("[AayamSceneBootstrapper] DoorPlaneStabilityLogger wired - " +
+                      "logs plane.extents once per second while a geometric candidate exists.");
+        }
+
+        // ─── Door PnP World Anchor (Phase 4 Step 1, Option B) ────────────
+
+        private static void WireDoorPnPWorldAnchor(BaseRig rig, Systems systems)
+        {
+            var segmenter = rig.CameraGO.GetComponent<VisualDoorSegmenter>();
+            if (segmenter == null)
+            {
+                Debug.LogWarning("[AayamSceneBootstrapper] No VisualDoorSegmenter on the camera rig - " +
+                                  "skipping DoorPnPWorldAnchor wiring. Run WireVisualDoorSegmentation first.");
+                return;
+            }
+
+            var coordinateSystem = rig.CameraGO.GetComponent<DoorCoordinateSystem>();
+            if (coordinateSystem == null)
+                coordinateSystem = rig.CameraGO.AddComponent<DoorCoordinateSystem>();
+
+            var anchor = rig.CameraGO.GetComponent<DoorPnPWorldAnchor>();
+            if (anchor == null) anchor = rig.CameraGO.AddComponent<DoorPnPWorldAnchor>();
+            SetPrivateField(anchor, "_segmenter", segmenter);
+            SetPrivateField(anchor, "_coordinateSystem", coordinateSystem);
+
+            var canvasRoot = GameObject.Find(UIRootName);
+            if (canvasRoot != null)
+            {
+                var debugText = FindOrCreateUIText(canvasRoot.transform, "DoorPnPDebugText", "PnP: no pose yet");
+                var debugRect = debugText.GetComponent<RectTransform>();
+                debugRect.sizeDelta = new Vector2(600, 80);
+                debugRect.anchoredPosition = new Vector2(0, 500); // below the Step 8 geometry label at y=600
+                debugText.fontSize = 28;
+                debugText.color = Color.cyan;
+
+                var debugLabel = debugText.gameObject.GetComponent<DoorPnPDebugLabel>();
+                if (debugLabel == null) debugLabel = debugText.gameObject.AddComponent<DoorPnPDebugLabel>();
+                SetPrivateField(debugLabel, "_anchor", anchor);
+            }
+
+            Debug.Log($"[AayamSceneBootstrapper] DoorCoordinateSystem + DoorPnPWorldAnchor attached to '{rig.CameraGO.name}', " +
+                      "on-screen PnP pose label wired. NOT YET VERIFIED on-device - see " +
+                      "docs/phases/phase-4-implementation-plan.md.");
         }
 
         // ─── Generic Helpers ────────────────────────────────────────────

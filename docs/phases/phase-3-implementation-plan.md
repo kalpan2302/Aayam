@@ -453,10 +453,71 @@ on-device (2026-10-12).** New code, none of it existed before today:
 - Added `DoorGeometryDebugLabel.cs` (Canvas-rooted, same reasoning as the
   Step 7 label) to show this on-screen without needing a USB tether.
 
-**Still not done:** this only reports a single door's dimensions/handle-side
-as text - nothing actually *uses* the geometry yet (no world-space anchor
-refinement, no visual box/outline overlay). That's further-out work, not
-started.
+**World-space anchor refinement: ⚠️ implemented, math verified, visual
+on-device confirmation still outstanding (2026-10-12).**
+
+Deliberately avoided projecting camera-image pixels through screen space at
+all (the risky mapping `DoorConfidenceCoordinator`'s own doc comment
+flagged, the same bug class as Phase 2's QR scanner debugging). Instead:
+`DoorGeometryExtractor.HandleNormalized` gives the handle's position as a
+(u,v) fraction *within the door quad itself* - scale- and shape-independent,
+computed via inverse-bilinear edge projection, unit-tested against 4
+synthetic cases (axis-aligned rect, 10%/25% and 90%/50% handle positions,
+skewed quad) before trusting it. New `HandleWorldAnchorRefiner.cs` then
+converts that fraction straight to world space using the **existing**,
+already-trusted geometric placement's `ARPlane` as the coordinate frame
+(`plane.transform.TransformPoint(localOffset)`, where `localOffset` is built
+from the plane's own `extents`) - confirmed against `ARPlane`'s own source
+(`normal => transform.up`; boundary points documented as local-X/Z "plane
+space"), not assumed.
+
+- Caught and fixed a repeat of the exact magenta "missing shader" bug
+  `PlacementReticle` silently has (root-caused earlier this session,
+  2026-10-11): `GameObject.CreatePrimitive`'s default material is Built-in
+  Pipeline, not URP. Assigned an explicit `Universal Render Pipeline/Unlit`
+  material to the fallback marker instead of repeating it unfixed.
+- **First on-device screenshot showed the marker in the wrong place** - door
+  correctly read "handle=right", marker appeared near the left door frame.
+  Added diagnostic logging rather than accepting or hand-waving this.
+- **Debugged via logged real plane data, not guesswork**: computed
+  `Cross(plane.transform.up, Vector3.up)` by hand against two independent
+  logged `ARPlane` instances and confirmed it exactly equals the logged
+  `transform.right` both times - and `Cross(normal, worldUp)` is the
+  textbook-correct "viewer's right hand" direction for someone facing the
+  plane (derived from Unity's own `right = Cross(up, forward)` identity).
+  So `transform.right` already *is* the correct width axis; the original
+  code's axis/sign choice was not the bug.
+- Most likely explanation for the wrong-looking first screenshot: the test
+  door was heavily occluded by hanging clothes (the same door Step 7/8's ML
+  models also struggled with), which plausibly confused the *geometric*
+  heuristic's own plane-boundary detection into locking onto a mismatched
+  plane - a pre-existing geometric-heuristic limitation, not a bug in this
+  new code. Unconfirmed: by the time this was investigated, the phone had
+  been physically moved (a later screenshot showed a curtain and someone's
+  foot), so a clean visual confirmation shot (marker landing on a visible
+  handle against an *unobstructed* door) was not obtained this session.
+
+**Update, same day, with Kalpan actively scanning an unobstructed door:**
+the marker was visible but landed right-of-center for a confirmed
+"handle=left" door - contradicting the theoretical derivation above. Flipped
+the X sign empirically and rebuilt; **still wrong after the flip**, ruling
+out a simple sign error. Root cause not found: debugging this live,
+world-space placement problem through asynchronous screenshots has a
+fundamental timing gap (the marker is a static world point; if the phone
+moves between the logged computation and the screenshot, a stale position
+looks identical to a wrong one) that this session's tooling can't resolve.
+**Conclusion: do not trust `HandleWorldAnchorRefiner`'s world-space math as
+verified.** Superseded by Phase 4's door coordinate system, which replaces
+the ambiguous `ARPlane.transform` local axes this relied on with an
+explicitly-defined door frame (true corners as the basis, not plane
+extents) - see `phase-4-implementation-plan.md`. The component and its
+debug logging are left in place as a reference/fallback, not deleted, but
+should not be relied on until re-verified.
+
+**Not done, carried to Phase 4 rather than finished here:** visual
+on-device confirmation of correct world-space placement; wiring into actual
+product placement (`ObjectPlacementController` is untouched); any visual
+box/outline overlay.
 
 ---
 
@@ -475,10 +536,12 @@ started.
 
 ## Status
 
-**Steps 1–6 done, Step 7 accuracy confirmed / latency ~53ms (just above the
-50ms budget, down from 72ms), Step 8 trained + exported + on-device verified
-(last updated 2026-10-12, overriding the earlier "deferred" sequencing at
-Kalpan's direction).** Dataset trained, exported,
+**CLOSED OUT 2026-10-12, handed off to Phase 4.** Steps 1–6 done, Step 7
+accuracy confirmed / latency ~53ms (down from 72ms, ~3ms over budget), Step
+8 trained + exported + on-device verified, world-space placement attempted
+but NOT verified correct (superseded by Phase 4's coordinate system - see
+`phase-4-implementation-plan.md`). Overrides the earlier "Step 8 deferred"
+sequencing at Kalpan's explicit direction. Dataset trained, exported,
 integrated, and combined with the existing heuristic (see each step section
 above for dates/evidence).
 
@@ -519,16 +582,28 @@ Step 7, the two halves:
   directly against its source — would need a custom shader, not a built-in
   option).
 
-Phase 3 is close to complete:
-- Box detection (Steps 1–6): done.
-- Step 7 accuracy: confirmed on real hardware. Latency: 72ms → ~53ms via a
-  measured backend switch, still ~3ms over the 50ms budget (needs a GPU-blit
-  shader to close further, not yet attempted).
-- Step 8 (segmentation + geometry extraction): trained (box mAP50=0.877,
-  mask mAP50=0.824), exported, and verified on-device
-  (`Geo: 178x495px handle=left conf=0.41` on a real door). The geometry is
-  extracted but not yet *used* for anything (no world-space anchor
-  refinement, no visual overlay) — that's further-out work, not started.
-- Android: completely untested — no build, install, or verification has
+**Final scorecard:**
+- Box detection (Steps 1–6): ✅ done.
+- Step 7 accuracy: ✅ confirmed on real hardware. Latency: ⚠️ 72ms → ~53ms via
+  a measured backend switch, still ~3ms over the 50ms budget (needs a
+  GPU-blit shader to close further, not attempted — open item).
+- Step 8 segmentation: ✅ trained (box mAP50=0.877, mask mAP50=0.824),
+  exported, verified on-device (`Geo: 178x495px handle=left conf=0.41` and
+  many consistent follow-up reads).
+- Step 8 world-space placement: ❌ attempted, NOT verified correct after two
+  independent on-device tests and a sign flip. Do not build on
+  `HandleWorldAnchorRefiner` as-is. This is the one piece of this phase
+  that's a genuine unresolved failure, not just an unstarted nice-to-have —
+  carried forward as Phase 4's actual starting problem, not swept under.
+- Android: ❌ completely untested — no build, install, or verification has
   touched Android at any point this phase, despite being in scope per the
-  plan.
+  plan. Open item, not carried into Phase 4 (Phase 4's roadmap doesn't
+  mention platform, this is still a Phase 3 loose end).
+
+**What carries into Phase 4:** the door's 4 corners + normal (from
+`DoorGeometryExtractor`, proven correct in 2D/mask space, verified across
+many real on-device reads) are exactly Phase 4 Step 1's stated input ("From
+CV detection (Phase 3), extract: four corners of the door, door center
+point, door normal vector"). Phase 4 replaces the failed ad-hoc
+`ARPlane.transform`-based world mapping with an explicit, principled door
+coordinate frame — see `phase-4-implementation-plan.md`.
