@@ -3,6 +3,7 @@
     "rootNamespace": "Aayam.AR",
     "references": [
         "Aayam.Core",
+        "Aayam.Models",
         "Unity.XR.ARFoundation",
         "Unity.XR.ARSubsystems",
         "Unity.XR.Management",

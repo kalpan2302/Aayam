@@ -24,9 +24,22 @@ namespace Aayam.AR.Planes
         // simplification left as extra vertices (7-8, not 4) even on a mask
         // OpenCV's own findContours+approxPolyDP agreed was that complex -
         // this isn't a tracer bug, the shape really is that detailed. 4%
-        // collapses it to a clean quad without going degenerate (5% was
-        // already too aggressive, collapsing to a 3-point triangle).
+        // was the value that worked on the masks tested at the time, but a
+        // fixed single value is brittle: on-device verification 2026-10-19
+        // found real frames consistently simplifying to 5-6 vertices at 4%,
+        // never exactly 4, blocking every PnP solve - mask noise varies
+        // frame to frame (lighting, angle, motion) in a way one fixed
+        // epsilon can't track. See SimplifyToQuad below.
         private const float SimplificationEpsilonFraction = 0.04f;
+
+        // Bounds for the epsilon search in SimplifyToQuad - wide enough to
+        // cover the whole documented-working range (2% was too conservative,
+        // 5% already collapsed to a triangle, per the comment above) without
+        // searching so wide it risks collapsing a genuinely non-door shape
+        // down to a false-positive quad.
+        private const float MinEpsilonFraction = 0.02f;
+        private const float MaxEpsilonFraction = 0.055f;
+        private const float EpsilonStepFraction = 0.0025f;
 
         public struct DoorGeometry
         {
@@ -63,9 +76,9 @@ namespace Aayam.AR.Planes
             if (contour == null || contour.Count < 3)
                 return new DoorGeometry { Ok = false, FailReason = "no contour found" };
 
-            var simplified = DouglasPeucker(contour, epsilon: Perimeter(contour) * SimplificationEpsilonFraction);
-            if (simplified.Count != 4)
-                return new DoorGeometry { Ok = false, FailReason = $"{simplified.Count} vertices, not 4" };
+            var simplified = SimplifyToQuad(contour, out int lastAttemptCount);
+            if (simplified == null)
+                return new DoorGeometry { Ok = false, FailReason = $"no epsilon in [{MinEpsilonFraction},{MaxEpsilonFraction}] gave 4 vertices (closest attempt: {lastAttemptCount})" };
 
             var (tl, tr, br, bl) = OrderCorners(simplified);
             float width = (Vector2.Distance(tl, tr) + Vector2.Distance(bl, br)) * 0.5f;
@@ -222,6 +235,57 @@ namespace Aayam.AR.Planes
             for (int i = 0; i < pts.Count; i++)
                 p += Vector2.Distance(pts[i], pts[(i + 1) % pts.Count]);
             return p;
+        }
+
+        /// <summary>
+        /// Searches epsilon fractions in [MinEpsilonFraction, MaxEpsilonFraction]
+        /// for one that simplifies the contour to exactly 4 vertices, starting
+        /// at SimplificationEpsilonFraction (the documented sweet spot) and
+        /// widening outward - vertex count is non-increasing as epsilon grows,
+        /// so SimplificationEpsilonFraction is tried first as the most likely
+        /// hit, then nearby values on both sides, rather than a fixed single
+        /// value that fails outright the moment real mask noise shifts the
+        /// contour even slightly (verified necessary on-device 2026-10-19 -
+        /// the fixed value alone was landing on 5-6 vertices every time on a
+        /// real door, never 4). Returns null and the vertex count from the
+        /// attempt closest to SimplificationEpsilonFraction if nothing in
+        /// range hits exactly 4.
+        /// </summary>
+        private static List<Vector2> SimplifyToQuad(List<Vector2> contour, out int lastAttemptCount)
+        {
+            float perimeter = Perimeter(contour);
+            lastAttemptCount = -1;
+
+            var first = DouglasPeucker(contour, perimeter * SimplificationEpsilonFraction);
+            if (first.Count == 4) return first;
+            lastAttemptCount = first.Count;
+
+            for (float delta = EpsilonStepFraction; ; delta += EpsilonStepFraction)
+            {
+                bool any = false;
+
+                float lower = SimplificationEpsilonFraction - delta;
+                if (lower >= MinEpsilonFraction)
+                {
+                    any = true;
+                    var result = DouglasPeucker(contour, perimeter * lower);
+                    if (result.Count == 4) return result;
+                    lastAttemptCount = result.Count;
+                }
+
+                float upper = SimplificationEpsilonFraction + delta;
+                if (upper <= MaxEpsilonFraction)
+                {
+                    any = true;
+                    var result = DouglasPeucker(contour, perimeter * upper);
+                    if (result.Count == 4) return result;
+                    lastAttemptCount = result.Count;
+                }
+
+                if (!any) break; // walked past both bounds, nothing left to try
+            }
+
+            return null;
         }
 
         private static List<Vector2> DouglasPeucker(List<Vector2> pts, float epsilon)

@@ -30,6 +30,14 @@ namespace Aayam.AR.Planes
         [Header("Marker")]
         [SerializeField] private GameObject _markerPrefab;
         [SerializeField] private Color _markerColor = Color.magenta;
+        // Serialized asset reference, not Shader.Find("Universal Render
+        // Pipeline/Unlit") - that string never resolves in this project
+        // (no URP package installed at all, confirmed 2026-10-15/21) and
+        // silently fell through to CreatePrimitive's bare default material
+        // every single time this ran. Assign Assets/_Project/Materials/
+        // DoorPnPMarker.mat (shader-wise identical need, different
+        // component) if this is ever re-enabled.
+        [SerializeField] private Material _markerMaterialTemplate;
 
         public Vector3? LastWorldPosition { get; private set; }
 
@@ -125,27 +133,22 @@ namespace Aayam.AR.Planes
                 }
                 else
                 {
-                    // CreatePrimitive's default material uses the Built-in
-                    // Pipeline Standard shader, which renders magenta
-                    // ("missing shader") under this project's URP - exactly
-                    // what PlacementReticle's own undiagnosed fallback
-                    // sphere hits (found and root-caused earlier this
-                    // session, 2026-10-11). Assigning an explicit
-                    // URP-compatible shader here instead of repeating it.
                     _markerInstance = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     _markerInstance.transform.localScale = Vector3.one * 0.03f;
                     Destroy(_markerInstance.GetComponent<Collider>());
                     var renderer = _markerInstance.GetComponent<MeshRenderer>();
                     if (renderer != null)
                     {
-                        var shader = Shader.Find("Universal Render Pipeline/Unlit");
-                        if (shader != null)
+                        if (_markerMaterialTemplate != null)
                         {
-                            renderer.material = new Material(shader);
+                            renderer.material = new Material(_markerMaterialTemplate);
                             renderer.material.color = _markerColor;
                         }
                         else
                         {
+                            Debug.LogWarning("[HandleWorldAnchorRefiner] _markerMaterialTemplate not " +
+                                              "assigned - falling back to CreatePrimitive's default " +
+                                              "material (has shown as the missing-shader fallback here).");
                             renderer.material.color = _markerColor;
                         }
                     }

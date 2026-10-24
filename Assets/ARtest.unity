@@ -1384,6 +1384,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 844671975}
   m_CullTransparentMesh: 1
+--- !u!1 &909944157
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 909944159}
+  - component: {fileID: 909944158}
+  m_Layer: 0
+  m_Name: TestDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &909944158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909944157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a760b9ef40f3433dbab7bbaa293d474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorCoordinateSystem
+  _doorOrigin: {fileID: 0}
+  _doorId: front-door
+--- !u!4 &909944159
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909944157}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &939160460
 GameObject:
   m_ObjectHideFlags: 0
@@ -1489,6 +1535,7 @@ RectTransform:
   - {fileID: 508094973}
   - {fileID: 449880353}
   - {fileID: 986204508}
+  - {fileID: 1026491946}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1628,8 +1675,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 600}
-  m_SizeDelta: {x: 600, y: 80}
+  m_AnchoredPosition: {x: 0, y: 560}
+  m_SizeDelta: {x: 600, y: 160}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &986204509
 MonoBehaviour:
@@ -1675,7 +1722,7 @@ MonoBehaviour:
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: 'Geo: no detection'
 --- !u!222 &986204511
@@ -1796,6 +1843,145 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2069230212}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1026491945
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1026491946}
+  - component: {fileID: 1026491949}
+  - component: {fileID: 1026491948}
+  - component: {fileID: 1026491947}
+  m_Layer: 0
+  m_Name: DoorPnPDebugText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1026491946
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026491945}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 939160464}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 360}
+  m_SizeDelta: {x: 600, y: 185}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1026491947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026491945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf1d6fadbcfab450dad8624e37465ab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.UI::Aayam.UI.DoorPnPDebugLabel
+  _anchor: {fileID: 1159396759}
+--- !u!114 &1026491948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026491945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 28
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 'PnP: no pose yet'
+--- !u!222 &1026491949
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026491945}
+  m_CullTransparentMesh: 1
+--- !u!1 &1062643503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1062643505}
+  - component: {fileID: 1062643504}
+  m_Layer: 0
+  m_Name: TestDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1062643504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062643503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a760b9ef40f3433dbab7bbaa293d474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorCoordinateSystem
+  _doorOrigin: {fileID: 0}
+  _doorId: front-door
+--- !u!4 &1062643505
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062643503}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1076790071
 GameObject:
@@ -2015,6 +2201,12 @@ GameObject:
   - component: {fileID: 1159396756}
   - component: {fileID: 1159396757}
   - component: {fileID: 1159396758}
+  - component: {fileID: 1159396762}
+  - component: {fileID: 1159396761}
+  - component: {fileID: 1159396760}
+  - component: {fileID: 1159396759}
+  - component: {fileID: 1159396764}
+  - component: {fileID: 1159396763}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2284,6 +2476,98 @@ MonoBehaviour:
   _confidenceThreshold: 0.4
   _iouThreshold: 0.45
   _maskThreshold: 0.5
+--- !u!114 &1159396759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f8a9a31d32a24758a7c5e993ab20c59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorPnPWorldAnchor
+  _segmenter: {fileID: 1159396758}
+  _coordinateSystem: {fileID: 1159396760}
+  _assumedDoorWidthMeters: 0.7493
+  _assumedDoorHeightMeters: 2.159
+  _markerMaterialTemplate: {fileID: 2100000, guid: 0fd2c0d9df6dc4d049d9098bb9477d1b, type: 2}
+  _markerColor: {r: 0, g: 1, b: 1, a: 1}
+--- !u!114 &1159396760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a760b9ef40f3433dbab7bbaa293d474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorCoordinateSystem
+  _doorOrigin: {fileID: 0}
+  _doorId: front-door
+--- !u!114 &1159396761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43eb1611028bc493a99919df40a7ae0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorPlaneStabilityLogger
+  _geometricDetector: {fileID: 1867617680}
+  _sampleIntervalSeconds: 1
+--- !u!114 &1159396762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4db0b758d9b740fbaffb5ac3d41b059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.HandleWorldAnchorRefiner
+  _geometricDetector: {fileID: 1867617680}
+  _segmenter: {fileID: 1159396758}
+  _markerPrefab: {fileID: 0}
+  _markerColor: {r: 1, g: 0, b: 1, a: 1}
+  _markerMaterialTemplate: {fileID: 2100000, guid: 0fd2c0d9df6dc4d049d9098bb9477d1b, type: 2}
+--- !u!114 &1159396763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 455c42a3603e04bc4bf24a976274cf0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorAnchorPersistence
+  _anchorManager: {fileID: 1315766903}
+  _coordinateSystem: {fileID: 1159396760}
+--- !u!114 &1159396764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159396749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6815f5468bd64f459d04b3960cd9ceb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorAnchorDriftCompensator
+  _coordinateSystem: {fileID: 1159396760}
+  _confidenceThreshold: 0.5
+  _lerpSpeed: 2
 --- !u!1 &1229401779
 GameObject:
   m_ObjectHideFlags: 0
@@ -2827,6 +3111,7 @@ MonoBehaviour:
   _generateMipMaps: 1
   _anisotropicFilterLevel: 3
   _downloadTimeoutSec: 30
+  _placeholderMaterialTemplate: {fileID: 2100000, guid: d13c6ce68657746d9b1c00e1ca7cc47a, type: 2}
 --- !u!1 &1575843426
 GameObject:
   m_ObjectHideFlags: 0
@@ -3369,6 +3654,52 @@ MonoBehaviour:
   _maxHeight: 2.6
   _idealWidth: 0.9
   _idealHeight: 2.1
+--- !u!1 &1899949744
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1899949746}
+  - component: {fileID: 1899949745}
+  m_Layer: 0
+  m_Name: TestDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1899949745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1899949744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a760b9ef40f3433dbab7bbaa293d474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Aayam.AR::Aayam.AR.Planes.DoorCoordinateSystem
+  _doorOrigin: {fileID: 0}
+  _doorId: front-door
+--- !u!4 &1899949746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1899949744}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1909216609
 GameObject:
   m_ObjectHideFlags: 0
@@ -3650,6 +3981,7 @@ MonoBehaviour:
   _reticlePrefab: {fileID: 0}
   _validColor: {r: 0.2, g: 1, b: 0.4, a: 0.9}
   _invalidColor: {r: 1, g: 0.3, b: 0.3, a: 0.9}
+  _reticleMaterialTemplate: {fileID: 2100000, guid: 021ff952224d84f038705592444e9de5, type: 2}
   _maxDistance: 4
   _verticalOnly: 1
   _positionSmoothing: 12
@@ -3781,3 +4113,6 @@ SceneRoots:
   - {fileID: 2069230212}
   - {fileID: 2130863274}
   - {fileID: 939160464}
+  - {fileID: 1899949746}
+  - {fileID: 909944159}
+  - {fileID: 1062643505}

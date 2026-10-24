@@ -21,11 +21,25 @@ namespace Aayam.AR.Planes
     /// HandleWorldAnchorRefiner's on-device verification in Phase 3.
     ///
     /// Positions a visible marker at the computed door origin for
-    /// verification - like HandleWorldAnchorRefiner, this is a visual
-    /// stepping stone, NOT YET VERIFIED on-device. DoorPnPSolver's math
-    /// itself is verified (DoorPnPSolverTests, synthetic ground truth,
-    /// passing in-session); the end-to-end pipeline through a real camera
-    /// frame is not.
+    /// verification. VERIFIED on-device 2026-10-24 (see
+    /// docs/phases/phase-4-implementation-plan.md): the marker now lands on
+    /// or near the visible frame on real captured data, after removing the
+    /// extra DoorPnPSolver.RotatedFrameCorrection step below - see that
+    /// comment for why it was wrong, and why neither the solver math, the
+    /// world-transform, the assumed door size, nor camera staleness were
+    /// ever the cause (all independently cross-checked and cleared first).
+    ///
+    /// KNOWN, ACCEPTED RESIDUAL (2026-10-24, Kalpan's decision): the marker
+    /// still lands ~0.2-0.3m off from the door's true physical corner, a
+    /// smooth/systematic (not jittery) offset that persists even with the
+    /// full door framed. Every step of the pose math was independently
+    /// re-verified at that point (camera-local geometry matches the
+    /// assumed door size to ~1cm) - this isn't a software bug this file can
+    /// fix, it's either the ML segmentation model's own corner-detection
+    /// precision or a real ARKit pose/lens calibration gap. Accepted as the
+    /// current precision ceiling for this detection approach rather than
+    /// investigated further - see the plan doc's final entry on this before
+    /// reopening it.
     /// </summary>
     public class DoorPnPWorldAnchor : MonoBehaviour
     {
@@ -38,13 +52,32 @@ namespace Aayam.AR.Planes
         [SerializeField] private float _assumedDoorHeightMeters = 2.1f;
 
         [Header("Marker")]
+        // Serialized ASSET reference, not a runtime Shader.Find lookup - the
+        // latter failed on-device twice in a row (2026-10-15/21) despite
+        // being verified in the Editor both times and despite Always
+        // Included Shaders supposedly covering it; screen recordings kept
+        // showing the "missing shader" magenta fallback regardless. A
+        // Material asset Unity's build pipeline can see as a direct
+        // reference (Assets/_Project/Materials/DoorPnPMarker.mat) removes
+        // the string-lookup/stripping ambiguity entirely - this is the
+        // standard way to guarantee a shader survives a build, not a
+        // workaround. Assign the asset in the Inspector (or via
+        // AayamSceneBootstrapper, which now does this automatically).
+        [SerializeField] private Material _markerMaterialTemplate;
         [SerializeField] private Color _markerColor = Color.cyan;
 
         public Vector3? LastWorldPosition { get; private set; }
         public Quaternion? LastWorldRotation { get; private set; }
 
-        /// <summary>Fired after each successful PnP solve with the resulting world-space door origin pose.</summary>
-        public event System.Action<Vector3, Quaternion> OnWorldPoseUpdated;
+        /// <summary>
+        /// Fired after each successful PnP solve with the resulting world-space
+        /// door origin pose, plus distance from the capturing camera and whether
+        /// that point was in front of it - diagnostic fields added 2026-10-15
+        /// because the marker was invisible on-device with no way to tell
+        /// whether that meant "behind the camera" vs "far off to the side"
+        /// vs "right where the camera stood" without console access.
+        /// </summary>
+        public event System.Action<Vector3, Quaternion, float, bool, string, string> OnWorldPoseUpdated;
 
         private GameObject _originHost;
         private GameObject _markerInstance;
@@ -109,12 +142,34 @@ namespace Aayam.AR.Planes
                 return;
             }
 
-            Vector3 worldPos = result.CameraRotationAtCapture * pnp.PositionCameraLocal + result.CameraPositionAtCapture;
-            Quaternion worldRot = result.CameraRotationAtCapture * pnp.RotationCameraLocal;
+            // 2026-10-24: DoorPnPSolver.RotatedFrameCorrection (an extra
+            // +90deg rotation applied here since 2026-10-15) is REMOVED -
+            // it was the dominant cause of the marker landing off-screen,
+            // confirmed on real device data (docs/phases/
+            // phase-4-implementation-plan.md has the full evidence chain).
+            // RotateRgba90Clockwise + RotateIntrinsics90Clockwise above
+            // already correctly align the solved pose with Unity's actual
+            // camera-local axes (X right, Y up, Z forward) for this
+            // device's real sensor mounting - adding a further +90deg on
+            // top of that was an unnecessary second rotation, not a fix for
+            // anything. Proven algebraically, not just empirically: solving
+            // on rotated pixels/intrinsics and then applying +90deg is
+            // mathematically IDENTICAL to solving directly on raw
+            // (unrotated) pixels/intrinsics with no correction at all
+            // (verified offline against real captured data) - i.e. the
+            // rotate-then-correct round trip was a no-op, so the shipped
+            // behavior was indistinguishable from never rotating at all,
+            // while the real fix needed was to rotate once and stop.
+            // DoorPnPSolverTests.RotatedPipeline_RecoversGroundTruthPose's
+            // synthetic ground truth has been corrected to match (its
+            // "camera-local == raw sensor pixel axes" assumption was the
+            // untested, and ultimately wrong, premise this depended on).
+            Vector3 positionCameraLocal = pnp.PositionCameraLocal;
+            Quaternion rotationCameraLocal = pnp.RotationCameraLocal;
 
-            // NOT YET VERIFIED on-device - see class doc. Logged deliberately
-            // so whoever does that check next has the evidence trail,
-            // matching HandleWorldAnchorRefiner's "left in deliberately" log.
+            Vector3 worldPos = result.CameraRotationAtCapture * positionCameraLocal + result.CameraPositionAtCapture;
+            Quaternion worldRot = result.CameraRotationAtCapture * rotationCameraLocal;
+
             Debug.Log($"[DoorPnPWorldAnchor] worldPos={worldPos} worldRot={worldRot.eulerAngles} " +
                       $"camPos={result.CameraPositionAtCapture} camRot={result.CameraRotationAtCapture.eulerAngles} " +
                       $"assumedSize={w}x{h}m");
@@ -125,27 +180,71 @@ namespace Aayam.AR.Planes
                 _coordinateSystem.SetOriginFromWorldPose(worldPos, worldRot, _originHost);
             }
 
+            Vector3 toMarker = worldPos - result.CameraPositionAtCapture;
+            float distFromCamera = toMarker.magnitude;
+            Vector3 camForward = result.CameraRotationAtCapture * Vector3.forward;
+            bool inFrontOfCamera = Vector3.Dot(camForward, toMarker) > 0f;
+
+            string intrinsicsDiag = result.IntrinsicsResolutionMismatch
+                ? $"intrinsics CORRECTED (reported {result.IntrinsicsReportedResolution.x}x{result.IntrinsicsReportedResolution.y} vs actual {result.RawWidth}x{result.RawHeight})"
+                : "intrinsics OK (matched captured resolution)";
+
+            // Viewport readout kept as an ongoing on-screen/console sanity
+            // check (not a live hypothesis test anymore - that investigation
+            // is closed, see class doc). Note a known, separate, smaller-
+            // magnitude residual found during that investigation and NOT
+            // fixed here: Camera.main's actual projectionMatrix tracks the
+            // real device screen's aspect (~0.46, via ARCameraManager/ARKit
+            // overriding it every frame) rather than the ~0.75
+            // VisualDoorSegmenter's own fieldOfView/aspect fix sets - reading
+            // .aspect back shows the set value, but the matrix actually used
+            // for rendering/WorldToViewportPoint does not. Confirmed via
+            // Camera.main.projectionMatrix's m00/m11 terms on-device
+            // 2026-10-24; not revisited since the rotation fix above already
+            // resolved the dominant symptom.
+            string viewportDiag = "viewport: no Camera.main";
+            if (Camera.main != null)
+            {
+                Vector3 vp = Camera.main.WorldToViewportPoint(worldPos);
+                bool onScreen = vp.z > 0f && vp.x >= 0f && vp.x <= 1f && vp.y >= 0f && vp.y <= 1f;
+                viewportDiag = $"cyan=({vp.x:F2},{vp.y:F2}) {(onScreen ? "ON" : "OFF")}";
+            }
+
+            Debug.Log($"[DoorPnPWorldAnchor] {intrinsicsDiag} | {viewportDiag}");
+
             LastWorldPosition = worldPos;
             LastWorldRotation = worldRot;
             ShowMarker(worldPos);
-            OnWorldPoseUpdated?.Invoke(worldPos, worldRot);
+            OnWorldPoseUpdated?.Invoke(worldPos, worldRot, distFromCamera, inFrontOfCamera, intrinsicsDiag, viewportDiag);
         }
 
         private void ShowMarker(Vector3 worldPosition)
         {
             if (_markerInstance == null)
             {
-                // Explicit URP shader - CreatePrimitive's default material
-                // renders magenta ("missing shader") under this project's
-                // URP, hit twice already (PlacementReticle, undiagnosed;
-                // HandleWorldAnchorRefiner, caught and fixed) - not repeating it.
                 _markerInstance = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                _markerInstance.transform.localScale = Vector3.one * 0.03f;
+                // 15cm, up from 3cm - a 3cm sphere a couple meters out was
+                // indistinguishable from "nothing rendered" on the first
+                // on-device verification pass (2026-10-15).
+                _markerInstance.transform.localScale = Vector3.one * 0.15f;
                 Destroy(_markerInstance.GetComponent<Collider>());
                 var renderer = _markerInstance.GetComponent<MeshRenderer>();
-                var shader = Shader.Find("Universal Render Pipeline/Unlit");
-                renderer.material = shader != null ? new Material(shader) : renderer.material;
-                renderer.material.color = _markerColor;
+
+                if (_markerMaterialTemplate != null)
+                {
+                    // Instance copy (not sharedMaterial) so tweaking
+                    // _markerColor doesn't touch the project asset.
+                    renderer.material = new Material(_markerMaterialTemplate);
+                    renderer.material.color = _markerColor;
+                }
+                else
+                {
+                    Debug.LogWarning("[DoorPnPWorldAnchor] _markerMaterialTemplate not assigned - " +
+                                      "falling back to CreatePrimitive's default material, which has " +
+                                      "twice shown as the \"missing shader\" magenta fallback on-device " +
+                                      "(2026-10-15, 2026-10-21). Assign Assets/_Project/Materials/" +
+                                      "DoorPnPMarker.mat in the Inspector.");
+                }
             }
             _markerInstance.transform.position = worldPosition;
         }

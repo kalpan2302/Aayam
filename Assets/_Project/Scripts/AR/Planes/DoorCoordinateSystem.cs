@@ -25,8 +25,21 @@ namespace Aayam.AR.Planes
     {
         [SerializeField] private Transform _doorOrigin;
 
+        // Step 4's "Support for multiple doors... by maintaining a list of
+        // active DoorCoordinateSystem instances" (DoorRegistry). Registering
+        // here, at runtime Awake/OnDestroy, not from the Editor bootstrapper -
+        // a bootstrapper-time Register() call only affects the Editor
+        // process that happened to run the menu command, never the actual
+        // built app, which would leave DoorRegistry silently empty on-device
+        // (caught 2026-10-21 before it shipped, see
+        // phase-4-implementation-plan.md).
+        [SerializeField] private string _doorId = "front-door";
+
         public Transform DoorOrigin => _doorOrigin;
         public bool HasOrigin => _doorOrigin != null;
+
+        private void Awake() => DoorRegistry.Register(_doorId, this);
+        private void OnDestroy() => DoorRegistry.Unregister(_doorId);
 
         // ─── World <-> Door space (roadmap doc's own API) ────────────
 

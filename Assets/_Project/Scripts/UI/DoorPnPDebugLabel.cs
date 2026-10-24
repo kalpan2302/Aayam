@@ -34,10 +34,13 @@ namespace Aayam.UI
                 _anchor.OnWorldPoseUpdated -= HandlePoseUpdated;
         }
 
-        private void HandlePoseUpdated(Vector3 worldPos, Quaternion worldRot)
+        private void HandlePoseUpdated(Vector3 worldPos, Quaternion worldRot, float distFromCamera, bool inFrontOfCamera, string intrinsicsDiag, string viewportDiag)
         {
             if (_label == null) return;
-            _label.text = $"PnP: pos=({worldPos.x:F2},{worldPos.y:F2},{worldPos.z:F2}) rot={worldRot.eulerAngles.y:F0}deg";
+            _label.text = $"PnP: pos=({worldPos.x:F2},{worldPos.y:F2},{worldPos.z:F2}) rot={worldRot.eulerAngles.y:F0}deg\n" +
+                           $"dist={distFromCamera:F2}m {(inFrontOfCamera ? "FRONT" : "BEHIND CAMERA")}\n" +
+                           intrinsicsDiag + "\n" +
+                           viewportDiag;
         }
     }
 }

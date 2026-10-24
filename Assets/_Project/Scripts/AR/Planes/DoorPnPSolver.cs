@@ -196,12 +196,30 @@ namespace Aayam.AR.Planes
         /// Rotates a raw camera image's intrinsics to match a frame that has
         /// been rotated 90 degrees clockwise (the exact transform
         /// VisualDoorDetector/VisualDoorSegmenter apply to fix ARKit's raw
-        /// sensor-orientation bug - see their RotateRgba90Clockwise). Derived
-        /// and pinned down by DoorPnPSolverTests, not trusted from derivation
-        /// alone, same as the rest of this file: for a 90CW rotation,
+        /// sensor-orientation bug - see their RotateRgba90Clockwise):
         /// (x,y) -> (rawHeight-1-y, x), so the axis that measured horizontal
         /// extent (fx, cx) in the raw frame measures vertical extent in the
-        /// rotated frame and vice versa.
+        /// rotated frame and vice versa. Cx uses "-1" to match the pixel
+        /// rotation's own "-1" exactly (was previously omitted here - caused
+        /// a ~1-2mm/~0.1deg residual error, caught 2026-10-15 by an
+        /// end-to-end synthetic test, not by derivation).
+        ///
+        /// Feeding rotated pixels + these rotated intrinsics into
+        /// SolvePlanarPose recovers PositionCameraLocal/RotationCameraLocal
+        /// directly in Unity's true camera-local axes (X right, Y up, Z
+        /// forward) for this device's real sensor mounting - no further
+        /// correction needed. That was NOT always true here: from
+        /// 2026-10-15 to 2026-10-24 the caller (DoorPnPWorldAnchor) applied
+        /// an extra +90deg rotation on top (DoorPnPSolver.RotatedFrameCorrection,
+        /// since removed), based on a synthetic ground-truth test whose own
+        /// "camera-local axes == raw sensor pixel axes" assumption was never
+        /// checked against a real device. It algebraically made that extra
+        /// rotation a no-op round trip (equivalent to never rotating at
+        /// all), which on real on-device data put the marker consistently
+        /// off-screen - see docs/phases/phase-4-implementation-plan.md for
+        /// the full evidence chain and
+        /// DoorPnPSolverTests.RotatedPipeline_RecoversGroundTruthPose for
+        /// the corrected ground truth.
         /// </summary>
         public static Intrinsics RotateIntrinsics90Clockwise(Intrinsics raw, int rawWidth, int rawHeight)
         {
@@ -209,7 +227,7 @@ namespace Aayam.AR.Planes
             {
                 Fx = raw.Fy,
                 Fy = raw.Fx,
-                Cx = rawHeight - raw.Cy,
+                Cx = rawHeight - 1 - raw.Cy,
                 Cy = raw.Cx,
             };
         }
