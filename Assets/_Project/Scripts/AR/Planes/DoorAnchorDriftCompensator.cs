@@ -9,18 +9,25 @@ namespace Aayam.AR.Planes
     /// (docs/phases/phase-4-door-coordinate-system.md Step 4) - nothing
     /// novel here, the roadmap already specified the blend.
     ///
-    /// NOT wired to a live confidence source yet - nothing in this codebase
-    /// currently produces a per-frame confidence score for the door pose
-    /// (DoorPnPWorldAnchor logs a position/rotation per successful solve,
-    /// not a confidence). Caller must supply one; see class doc on
-    /// DoorPnPWorldAnchor for where that would need to be added once Step 1
-    /// is confirmed and this gets wired in for real.
+    /// Wired to a live confidence source 2026-10-28:
+    /// `VisualDoorSegmenter.DoorResult.Confidence` (the ML door-class
+    /// detection confidence, already computed every solve, just never
+    /// threaded here before) - `DoorPnPWorldAnchor.HandleGeometry` calls
+    /// `UpdateDoorAnchor` with it on every successful PnP solve.
     /// </summary>
     public class DoorAnchorDriftCompensator : MonoBehaviour
     {
         [SerializeField] private DoorCoordinateSystem _coordinateSystem;
         [SerializeField] private float _confidenceThreshold = 0.5f;
         [SerializeField] private float _lerpSpeed = 2f;
+
+        /// <summary>
+        /// 2026-10-28: exposed so callers (DoorPnPWorldAnchor) can share this
+        /// exact threshold for their own "has detection been stable long
+        /// enough to save" tracking, rather than duplicating a second,
+        /// potentially-inconsistent confidence cutoff.
+        /// </summary>
+        public float ConfidenceThreshold => _confidenceThreshold;
 
         private void Awake()
         {

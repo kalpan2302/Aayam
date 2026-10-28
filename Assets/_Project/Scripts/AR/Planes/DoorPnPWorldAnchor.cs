@@ -51,9 +51,26 @@ namespace Aayam.AR.Planes
         // optional (null-checked below) so this keeps working standalone.
         [SerializeField] private DoorGeometryState _geometryState;
 
+        // 2026-10-28, Phase 4 Step 4 wiring: both optional/null-checked, so
+        // this keeps working standalone exactly as before if either is
+        // unassigned - see HandleGeometry for how they're driven.
+        [SerializeField] private DoorAnchorDriftCompensator _driftCompensator;
+        [SerializeField] private DoorAnchorPersistence _anchorPersistence;
+
+        [Header("Step 4: save-once-stable")]
+        // How many consecutive successful, high-confidence solves (each
+        // already ~_inferEveryNFrames apart, see VisualDoorSegmenter) before
+        // trusting the origin enough to persist it once. No precise basis
+        // for "10" beyond "a handful of seconds of consistent detection" -
+        // tunable, not a measured constant.
+        [SerializeField] private int _stableSolvesBeforeSave = 10;
+
         [Header("Assumed real-world door size (roadmap standard sizes)")]
         [SerializeField] private float _assumedDoorWidthMeters = 0.9f;
         [SerializeField] private float _assumedDoorHeightMeters = 2.1f;
+
+        private int _consecutiveStableSolves;
+        private bool _hasSavedOrigin;
 
         [Header("Marker")]
         // Serialized ASSET reference, not a runtime Shader.Find lookup - the
@@ -143,6 +160,10 @@ namespace Aayam.AR.Planes
             if (!pnp.Ok)
             {
                 Debug.Log($"[DoorPnPWorldAnchor] PnP failed: {pnp.FailReason}");
+                // A failed solve breaks the "stable detection" streak just
+                // like a low-confidence one would - no new pose at all is
+                // the extreme case of "not trustworthy right now".
+                _consecutiveStableSolves = 0;
                 return;
             }
 
@@ -179,6 +200,34 @@ namespace Aayam.AR.Planes
             Debug.Log($"[DoorPnPWorldAnchor] worldPos={worldPos} worldRot={worldRot.eulerAngles} " +
                       $"camPos={result.CameraPositionAtCapture} camRot={result.CameraRotationAtCapture.eulerAngles} " +
                       $"assumedSize={w}x{h}m");
+
+            // 2026-10-28, Phase 4 Step 4 wiring: drift compensation blends
+            // the origin toward every new high-confidence solve (roadmap's
+            // own Lerp/Slerp, gated on its own confidence threshold
+            // internally - this just supplies the confidence source that
+            // was previously missing, result.Confidence is the ML door-
+            // class detection confidence, already computed every solve).
+            _driftCompensator?.UpdateDoorAnchor(new Pose(worldPos, worldRot), result.Confidence);
+
+            // Relocalization: save the origin once detection has been
+            // confidently stable for a while, not on every frame (that
+            // would spam ARAnchor creation for no benefit - the drift
+            // compensator already keeps the LIVE origin smoothly refined;
+            // this is purely the "restore after tracking loss" fallback,
+            // and a single reasonably-good snapshot serves that purpose).
+            float confidenceThreshold = _driftCompensator != null ? _driftCompensator.ConfidenceThreshold : 0.5f;
+            if (result.Confidence > confidenceThreshold)
+                _consecutiveStableSolves++;
+            else
+                _consecutiveStableSolves = 0;
+
+            if (!_hasSavedOrigin && _consecutiveStableSolves >= _stableSolvesBeforeSave && _anchorPersistence != null)
+            {
+                _hasSavedOrigin = _anchorPersistence.SaveCurrentOrigin();
+                if (_hasSavedOrigin)
+                    Debug.Log($"[DoorPnPWorldAnchor] Origin saved after {_consecutiveStableSolves} consecutive " +
+                              $"stable solves (confidence > {confidenceThreshold:F2}).");
+            }
 
             if (_coordinateSystem != null)
             {

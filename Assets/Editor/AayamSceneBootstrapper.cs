@@ -640,10 +640,24 @@ namespace Aayam.Editor
             // time Register() call would only affect this Editor process,
             // never the actual built app (caught and fixed 2026-10-21).
 
+            // 2026-10-28: wire both back onto the already-existing
+            // DoorPnPWorldAnchor (created earlier in WireDoorPnPWorldAnchor,
+            // which runs before this method - these components didn't exist
+            // yet at that point, so the back-reference has to happen here
+            // instead). HandleGeometry now calls UpdateDoorAnchor every
+            // solve and SaveCurrentOrigin once detection has been stable for
+            // a while - see its own comment for the exact trigger.
+            var anchor = rig.CameraGO.GetComponent<DoorPnPWorldAnchor>();
+            if (anchor != null)
+            {
+                SetPrivateField(anchor, "_driftCompensator", drift);
+                SetPrivateField(anchor, "_anchorPersistence", persistence);
+            }
+
             Debug.Log("[AayamSceneBootstrapper] DoorAnchorDriftCompensator + DoorAnchorPersistence " +
-                      "attached. Step 4's logic layer exists now but is NOT yet exercised - nothing " +
-                      "calls UpdateDoorAnchor or SaveCurrentOrigin live yet (no confidence source, no " +
-                      "trigger for when to save). See docs/phases/phase-4-implementation-plan.md.");
+                      "attached and wired into DoorPnPWorldAnchor's live confidence source " +
+                      "(VisualDoorSegmenter.DoorResult.Confidence). See " +
+                      "docs/phases/phase-4-implementation-plan.md for verification history.");
         }
 
         // ─── Door Edge Calibration + Hinge Side UI (Phase 4 Steps 5-6) ───

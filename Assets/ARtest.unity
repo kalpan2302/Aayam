@@ -3105,6 +3105,9 @@ MonoBehaviour:
   _segmenter: {fileID: 1159396758}
   _coordinateSystem: {fileID: 1159396760}
   _geometryState: {fileID: 1159396765}
+  _driftCompensator: {fileID: 1159396764}
+  _anchorPersistence: {fileID: 1159396763}
+  _stableSolvesBeforeSave: 10
   _assumedDoorWidthMeters: 0.7493
   _assumedDoorHeightMeters: 2.159
   _markerMaterialTemplate: {fileID: 2100000, guid: 0fd2c0d9df6dc4d049d9098bb9477d1b, type: 2}

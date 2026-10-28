@@ -1382,3 +1382,52 @@ precedent existed) matching the established `FindOrCreateUIButton`/
 done; Stage B's interactive on-device confirmation remains blocked by the
 pre-existing reticle/plane-tracking issue, accepted per the decision
 above).
+
+## Step 4 wiring to a live confidence source (2026-10-28)
+
+Last gap: `DoorAnchorDriftCompensator.UpdateDoorAnchor`/
+`DoorAnchorPersistence.SaveCurrentOrigin` existed and were wired into the
+scene since 2026-10-21, but nothing ever called either - no confidence
+source, no save trigger. Fixed:
+
+- `DoorAnchorDriftCompensator` gained a public `ConfidenceThreshold`
+  getter (was already a private field used internally) so the save-trigger
+  logic below can share the exact same cutoff rather than duplicating a
+  second, possibly-inconsistent one.
+- `DoorPnPWorldAnchor.HandleGeometry` now calls `_driftCompensator?.
+  UpdateDoorAnchor(new Pose(worldPos, worldRot), result.Confidence)` on
+  every successful solve - `result.Confidence` is
+  `VisualDoorSegmenter.DoorResult.Confidence`, the ML door-class detection
+  confidence that was already computed every frame and shown on-screen
+  ("ML: Door 0.88 | Handle 0.69") but never threaded anywhere live before.
+- Added a save-once-stable trigger for `DoorAnchorPersistence`: tracks
+  consecutive successful, above-threshold-confidence solves
+  (`_consecutiveStableSolves`, reset to 0 on either a failed solve or a
+  low-confidence one), and calls `SaveCurrentOrigin()` exactly once, the
+  first time `_stableSolvesBeforeSave` (default 10, tunable, no precise
+  basis beyond "a handful of seconds of consistent detection") is reached.
+  One-time save, not continuous - the drift compensator already keeps the
+  live origin smoothly refined; persistence is purely the "restore after
+  tracking loss" fallback the roadmap describes, and a single reasonably-
+  good snapshot serves that.
+- `AayamSceneBootstrapper.WireDoorAnchorSystems` wires the new fields back
+  onto the already-created `DoorPnPWorldAnchor` (it runs after
+  `WireDoorPnPWorldAnchor`, so the back-reference has to happen here).
+
+EditMode suite clean (117/119, same 2 pre-existing unrelated failures, no
+new test added - both components are MonoBehaviours with `Time.deltaTime`-
+dependent Lerp/Slerp behavior, same class of AR-interactive code this
+project verifies on-device rather than via EditMode unit tests, matching
+established precedent).
+
+**Confirmed on-device**: pointed the phone steadily at the door for ~10s;
+console showed `[DoorAnchorPersistence] Door origin saved at
+(-1.148,1.829,2.659)` followed immediately by `[DoorPnPWorldAnchor] Origin
+saved after 10 consecutive stable solves (confidence > 0.50)` - the full
+chain (confidence source -> stability counter -> both components) working
+exactly as designed, first try.
+
+**Phase 4 is now complete** apart from the two accepted-not-fixed items
+already documented above (the placement-reticle/ARKit plane-tracking
+reliability gap on this door, and the `<5mm` accuracy-target ceiling of
+this single-photo ML-detection approach).
