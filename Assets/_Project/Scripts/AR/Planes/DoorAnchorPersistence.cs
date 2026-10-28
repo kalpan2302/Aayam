@@ -11,8 +11,8 @@ namespace Aayam.AR.Planes
     ///
     /// Caller decides when the origin is trustworthy enough to save (e.g.
     /// after Step 1's pose has visually stabilized) - this class doesn't
-    /// gate on anything itself, matching DoorCoordinateSystem.SetOriginFromPlane's
-    /// own "caller is responsible for stability validation" convention.
+    /// gate on anything itself, same "caller is responsible for stability
+    /// validation" convention as DoorCoordinateSystem.SetOriginFromWorldPose.
     /// </summary>
     public class DoorAnchorPersistence : MonoBehaviour
     {

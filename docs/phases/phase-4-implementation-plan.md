@@ -251,6 +251,21 @@ unverified foundation.
 
 ## Status
 
+**NOT DONE. Updated 2026-10-24**: item (1) below (on-device verification
+of the PnP pipeline, "the next real blocker") is now resolved - the
+dominant bug (marker landing off-screen, `RotatedFrameCorrection`) is
+fixed and confirmed on real hardware; a smaller ~0.2-0.3m positioning
+residual is accepted, not fixed (Kalpan's decision - see that item's full
+entry for the evidence chain). That resolves the item 4 (accuracy target)
+section below from "unassessed" to "assessed and missed" - real measured
+error is ~200-300mm against the roadmap's own `<5mm` deliverable, not a
+software bug, a real limitation of this single-photo ML-segmentation
+approach. **Still open**: Step 2's zone data isn't wired to real placement
+yet; Steps 3/5/6's UI flows (drag-and-drop clamping, tap-to-calibrate,
+tap-to-confirm-hinge-side) are entirely unbuilt; items 5-6 below are minor/
+out-of-scope cleanup. See the itemized list below for the authoritative,
+current breakdown - this paragraph is a pointer to it, not a duplicate.
+
 **Started 2026-10-12. Decision made (Option B), solver + integration built
 and compiling clean, synthetic math verified. On-device verification
 started 2026-10-19: scene wiring, marker rendering, a real PnP rotation-
@@ -1218,10 +1233,15 @@ detection) was built instead - `DoorPnPSolver` + `DoorPnPWorldAnchor`, see
      they're exactly the kind of interactive code that's unsafe to build
      without being able to watch it run.
 4. **Accuracy target (<5mm placement, roadmap's own deliverable)** -
-   can't be assessed at all until (1) happens; there's no measurement yet,
-   synthetic or real, of how close the recovered pose is to a real door.
-   Needs an actual tape-measure ground-truth comparison once (1) passes
-   visually, not just "looks right on screen."
+   **assessed 2026-10-24, MISSED.** Real measured error against the
+   physical door is ~200-300mm (the accepted residual from item (1)'s
+   final entries), two orders of magnitude over the roadmap's `<5mm`
+   target. This is a real limitation of a single-photo ML-segmentation
+   pose estimate, not a software bug - every step of the pose math was
+   independently verified correct before this was accepted. Closing this
+   gap, if ever needed, means a fundamentally different approach (e.g.
+   multi-frame fusion, a physical calibration step, or a tighter tolerance
+   on the ML model itself) - not a fix to this phase's existing code.
 5. **Minor cleanup, not blocking**: `DoorCoordinateSystem.SetOriginFromPlane`
    (Option A) and `DoorPlaneStabilityLogger` are now dead/diagnostic code,
    kept rather than deleted since nobody's asked to remove them yet -
@@ -1237,3 +1257,128 @@ detection) was built instead - `DoorPnPSolver` + `DoorPnPWorldAnchor`, see
    loading). The other two weren't found anywhere in `Assets/` - likely
    Unity/package-internal, not reproducible from the garbled on-screen
    text alone.
+
+## Remaining Phase 4 work (2026-10-25): zone wiring, calibration/hinge UI, cleanup
+
+Separate pass after the PnP marker fix above was accepted. Plan at
+`/Users/kalpan/.claude-personal/plans/zazzy-leaping-simon.md` (Stage A:
+cleanup, Stage B: wire `DoorComponentZones` into real placement, Stage C:
+tap-to-confirm-edges calibration, Stage D: tap-to-confirm-hinge-side).
+
+**Stage A - DONE, verified.** Deleted `DoorCoordinateSystem.SetOriginFromPlane`
++ `OriginBuildResult` (zero other call sites), `DoorPlaneStabilityLogger.cs`
++ its scene component + bootstrapper wiring, and the 3 stray orphaned
+`TestDoor` GameObjects in `ARtest.unity` (each silently colliding in
+`DoorRegistry` under the same `"front-door"` id). EditMode suite clean
+(99/101, same 2 pre-existing unrelated failures), bootstrapper re-run
+clean, on-device smoke check clean.
+
+**Stage B - code complete, EditMode-verified, on-device verification
+BLOCKED by a pre-existing, unrelated issue.** Added
+`DoorComponentZones.TryMapProductCategory`/`ClampToZone`,
+`DoorGeometryState` (new live door width/height/hinge-side holder, fed by
+`DoorPnPWorldAnchor`), threaded `ProductUIItem.Category` through
+`ProductSelector`/`ARHUDController.BeginPlacementFor`/
+`ObjectPlacementController.StartPlacement`, and the zone-clamp itself in
+`ExecutePlacement` (clamps the tapped position into the product's zone
+rather than replacing it with `ProductAutoPlacer`'s zone-center, preserving
+user intent). 112/114 EditMode tests pass (13 new, all passing; same 2
+pre-existing unrelated failures). Also fixed two bugs found while building
+the on-device test path: (1) `ProductData.Category` was never actually
+populated from the backend DTO (which has no category field on the detail
+endpoint at all) - worked around by threading category through from the
+list endpoint's `ProductSummary.CategoryName` instead, not by guessing at
+the backend's wire shape; (2) `ModelLoader.CreatePlaceholderCube()`
+correctly uses `_placeholderMaterialTemplate`, but nothing reactivated a
+placed clone after a deactivated template (`Instantiate` preserves source
+active-state, confirmed via grep - zero `SetActive` calls anywhere in
+`ObjectPlacementController`/`AnchorController`) - a **latent, pre-existing
+bug in the real non-stub placement path too**, not introduced by this work.
+**Fixed 2026-10-25** (Kalpan: "fix the placement bug"):
+`ObjectPlacementController.ExecutePlacement` now calls
+`instance.SetActive(true)` right after `Instantiate`, so every placed
+product is guaranteed visible regardless of whatever active-state its
+source template (loaded model or placeholder) happened to be in.
+**Confirmed on-device** (2026-10-28, after temporarily re-deactivating the
+test placeholder to reproduce the exact precondition `LoadAndPlaceAsync`'s
+real path hits): console confirmed the full pipeline -
+`Zone-clamped 'handle' to Handle: tapped doorSpace=(0.444,0.585,-0.600) ->
+clamped=(0.680,0.950,-0.600) (validate Ok=True)` then
+`'Product_HANDLE_001_0' placed at (0.734,1.111,0.489)` - and a screenshot
+from Kalpan showed the placed cube clearly visible (not invisible, not the
+missing-shader magenta fallback). Also incidentally re-confirms Stage B's
+zone-clamp working on real hardware for a tap that DID land inside
+`PlacementReticle`'s valid-surface gate this session - that gate's own
+narrowness remains the separate, accepted-not-fixed limitation documented
+above, but it isn't a 100%-of-the-time failure, just an unreliable one.
+   - **On-device blocker, root-caused, not a Stage B bug**: added a
+     temporary tap-gating diagnostic to `ObjectPlacementController.Update()`
+     (removed after use) and confirmed every tap during an ~80s on-device
+     session registered correctly (`tapped=True overUI=False`) but
+     `reticleValid=False` every single time, with the door in frame and
+     ML/PnP diagnostics (visible in a user-provided screen recording)
+     showing the door correctly detected throughout. `PlacementReticle`
+     gates ALL placement (door or otherwise) on `ARRaycastManager.Raycast`
+     against ARKit's OWN `TrackableType.PlaneWithinPolygon`/`FeaturePoint`
+     tracking at screen center, entirely independent of this phase's own
+     PnP/ML door detection - and this project's own earlier finding
+     (`Extents-stability scan results`, this doc, 2026-10-12) already
+     documented ARKit's plane tracking for this specific door as
+     undersized (locked at ~0.600m wide vs. the real ~0.75m door). A
+     non-door item placed successfully on a nearby wall during the same
+     session (not literally the floor - `_verticalOnly=true` gates EVERY
+     placement on a vertical-surface hit; height is snapped toward the
+     floor afterward via `anchor_y_mm`), consistent with the door's own
+     narrower polygon being the specific reason it alone never validates
+     at screen center. **This blocks interactively exercising the zone-
+     clamp with a real tap-to-place, but is not evidence of a bug in the
+     zone-clamp code itself** - confirmed separately via screen recording
+     that the door's PnP detection/geometry diagnostics are working
+     exactly as expected throughout the same session.
+   - **Decision (Kalpan, 2026-10-25): move on to Stages C/D, revisit Stage
+     B's on-device test later if the reticle/plane-tracking issue is ever
+     fixed.** EditMode coverage (112/114, 13 new tests) accepted as
+     sufficient confirmation of the zone-clamp math for now. Notably,
+     Stages C/D don't share this blocker - their planned tap handling
+     raycasts directly against the already-known door plane
+     (`DoorCoordinateSystem.DoorOrigin`), not through
+     `PlacementReticle`/`ARRaycastManager`'s ARKit plane-tracking at all,
+     so they aren't gated by the same undersized-polygon issue.
+
+**Stage C - DONE, confirmed on-device.** Added `DoorEdgeCalibrator.cs`
+(pure: `TryIntersectDoorPlane` - ray/door-plane intersection, independent
+of `PlacementReticle`'s ARKit-plane dependency - and `MeasureDoorSpaceSpan`)
+and `DoorEdgeCalibrationUI.cs` (tap-left-edge -> tap-right-edge -> shows
+the AR-measured span as a grounding readout -> manual tape-measurement
+entry -> `DoorCalibration.ComputeScaleCorrection` ->
+`DoorGeometryState.ApplyScaleCorrection`). 5 new EditMode tests (ray/plane
+math + a synthetic `DoorCoordinateSystem`), all passing - 119 total, 117
+passed, same 2 pre-existing unrelated failures. On-device: tapped both
+edges twice in one session, console confirmed the full state flow each
+time (`Tap the door's LEFT edge.` -> `...RIGHT edge.` -> `AR thinks this
+span is 0.602m`/`1.588m...`), InputField's native keyboard confirmed
+working. The large spread between the two measured spans (0.602m vs.
+1.588m) reflects where the user happened to tap, not a code issue - this
+flow measures whatever two points you tap, it doesn't know "edge" means
+anything structurally.
+
+**Stage D - DONE, confirmed on-device.** Added `DoorHingeSideUI.cs` (two
+buttons calling the already-existing
+`DoorGeometryState.SetOpeningDirectionOverride` ->
+`DoorOpeningDirection.WithUserOverride`). On-device: toggled Hinge
+Left/Right six times in one session, console confirmed every toggle
+(`hingeOnLeft=True/False (user confirmed)`) correctly.
+
+**Bootstrapper wiring (both stages)**: new `AayamSceneBootstrapper.
+WireDoorEdgeCalibration`, called from `BuildTestSceneWiring()` after
+`WireDoorAnchorSystems`. Both UI panels nested inside `Screen_ARScan`
+(opt-in interactive flow, matching `ARHUDController_Host`'s precedent),
+not the always-visible `AayamUI`-rooted diagnostic labels. Added
+`FindOrCreateUIInputField` (this project's first `InputField` - no prior
+precedent existed) matching the established `FindOrCreateUIButton`/
+`FindOrCreateUIText` pattern.
+
+**This closes the planned Phase 4 remaining-work pass** (Stages A-D all
+done; Stage B's interactive on-device confirmation remains blocked by the
+pre-existing reticle/plane-tracking issue, accepted per the decision
+above).

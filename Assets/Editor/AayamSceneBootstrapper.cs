@@ -56,9 +56,9 @@ namespace Aayam.Editor
             WireQRScanner(baseRig, ui.productSelector);
             WireVisualDoorDetection(baseRig, systems);
             WireVisualDoorSegmentation(baseRig, systems);
-            WireDoorPlaneStabilityLogger(baseRig, systems);
             WireDoorPnPWorldAnchor(baseRig, systems);
             WireDoorAnchorSystems(baseRig, systems);
+            WireDoorEdgeCalibration(baseRig, systems);
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log("<color=green>[AayamSceneBootstrapper]</color> Done. " +
@@ -532,18 +532,6 @@ namespace Aayam.Editor
                       "(see comment above - it was the real source of the recurring magenta marker).");
         }
 
-        // ─── Door Plane Stability Logger (Phase 4 diagnostic) ────────────
-
-        private static void WireDoorPlaneStabilityLogger(BaseRig rig, Systems systems)
-        {
-            var logger = rig.CameraGO.GetComponent<DoorPlaneStabilityLogger>();
-            if (logger == null) logger = rig.CameraGO.AddComponent<DoorPlaneStabilityLogger>();
-            SetPrivateField(logger, "_geometricDetector", systems.DoorDetector);
-
-            Debug.Log("[AayamSceneBootstrapper] DoorPlaneStabilityLogger wired - " +
-                      "logs plane.extents once per second while a geometric candidate exists.");
-        }
-
         // ─── Door PnP World Anchor (Phase 4 Step 1, Option B) ────────────
 
         private static void WireDoorPnPWorldAnchor(BaseRig rig, Systems systems)
@@ -560,10 +548,14 @@ namespace Aayam.Editor
             if (coordinateSystem == null)
                 coordinateSystem = rig.CameraGO.AddComponent<DoorCoordinateSystem>();
 
+            var geometryState = rig.CameraGO.GetComponent<DoorGeometryState>();
+            if (geometryState == null) geometryState = rig.CameraGO.AddComponent<DoorGeometryState>();
+
             var anchor = rig.CameraGO.GetComponent<DoorPnPWorldAnchor>();
             if (anchor == null) anchor = rig.CameraGO.AddComponent<DoorPnPWorldAnchor>();
             SetPrivateField(anchor, "_segmenter", segmenter);
             SetPrivateField(anchor, "_coordinateSystem", coordinateSystem);
+            SetPrivateField(anchor, "_geometryState", geometryState);
 
             AssignMaterialIfPresent(anchor, "_markerMaterialTemplate", "Assets/_Project/Materials/DoorPnPMarker.mat");
 
@@ -606,9 +598,20 @@ namespace Aayam.Editor
                 SetPrivateField(debugLabel, "_anchor", anchor);
             }
 
-            Debug.Log($"[AayamSceneBootstrapper] DoorCoordinateSystem + DoorPnPWorldAnchor attached to '{rig.CameraGO.name}', " +
-                      "on-screen PnP pose label wired. NOT YET VERIFIED on-device - see " +
-                      "docs/phases/phase-4-implementation-plan.md.");
+            // 2026-10-25, Phase 4 Step 3 wiring: give the already-live
+            // placement controller (built earlier in BuildPlacementSystems)
+            // access to this door's coordinate system + geometry, so
+            // ExecutePlacement can zone-clamp door-accessory products. Both
+            // fields are optional/null-checked there - this is additive.
+            if (systems.PlacementController != null)
+            {
+                SetPrivateField(systems.PlacementController, "_doorCoordinateSystem", coordinateSystem);
+                SetPrivateField(systems.PlacementController, "_doorGeometry", geometryState);
+            }
+
+            Debug.Log($"[AayamSceneBootstrapper] DoorCoordinateSystem + DoorGeometryState + DoorPnPWorldAnchor " +
+                      $"attached to '{rig.CameraGO.name}', on-screen PnP pose label wired, ObjectPlacementController " +
+                      "zone-wiring attached. See docs/phases/phase-4-implementation-plan.md for verification history.");
         }
 
         // ─── Door Anchor Drift/Persistence/Registry (Phase 4 Step 4) ─────
@@ -641,6 +644,82 @@ namespace Aayam.Editor
                       "attached. Step 4's logic layer exists now but is NOT yet exercised - nothing " +
                       "calls UpdateDoorAnchor or SaveCurrentOrigin live yet (no confidence source, no " +
                       "trigger for when to save). See docs/phases/phase-4-implementation-plan.md.");
+        }
+
+        // ─── Door Edge Calibration + Hinge Side UI (Phase 4 Steps 5-6) ───
+
+        private static void WireDoorEdgeCalibration(BaseRig rig, Systems systems)
+        {
+            var coordinateSystem = rig.CameraGO.GetComponent<DoorCoordinateSystem>();
+            var geometryState = rig.CameraGO.GetComponent<DoorGeometryState>();
+            if (coordinateSystem == null || geometryState == null)
+            {
+                Debug.LogWarning("[AayamSceneBootstrapper] No DoorCoordinateSystem/DoorGeometryState on the " +
+                                  "camera rig - skipping calibration/hinge UI wiring. Run WireDoorPnPWorldAnchor first.");
+                return;
+            }
+
+            // Nested inside Screen_ARScan, not Canvas-rooted: this is an
+            // opt-in interactive flow that only makes sense while actively
+            // scanning, unlike the always-visible diagnostic debug labels
+            // elsewhere in this file (same reasoning as ARHUDController_Host,
+            // which lives here too).
+            var arScanRoot = GameObject.Find("Screen_" + AppScreen.ARScan);
+            if (arScanRoot == null)
+            {
+                Debug.LogWarning("[AayamSceneBootstrapper] Screen_ARScan not found - skipping " +
+                                  "calibration/hinge UI wiring. Run BuildUI first.");
+                return;
+            }
+
+            // ── Edge calibration panel ── pixel anchoredPosition offsets
+            // from canvas center, matching this file's established
+            // convention (see the debug-text y=700/560/360 stack) - placed
+            // low on screen, clear of that diagnostic stack (down to
+            // y=267.5) and the product tray at the bottom.
+            var calibHost = FindOrCreateFullStretchChild(arScanRoot.transform, "DoorEdgeCalibrationUI_Host");
+            var calibStatus = FindOrCreateUIText(calibHost.transform, "CalibrationStatusText", "Calibration: not started");
+            var calibStatusRect = calibStatus.GetComponent<RectTransform>();
+            calibStatusRect.sizeDelta = new Vector2(600, 80);
+            calibStatusRect.anchoredPosition = new Vector2(0, -160);
+            var startButton = FindOrCreateUIButton(calibHost.transform, "StartCalibrationButton", "Calibrate Door");
+            startButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -230);
+            var measurementField = FindOrCreateUIInputField(calibHost.transform, "MeasurementInputField", "e.g. 0.75");
+            measurementField.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -300);
+            var confirmButton = FindOrCreateUIButton(calibHost.transform, "ConfirmCalibrationButton", "Confirm");
+            confirmButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -370);
+
+            var calibrationUI = rig.CameraGO.GetComponent<DoorEdgeCalibrationUI>();
+            if (calibrationUI == null) calibrationUI = rig.CameraGO.AddComponent<DoorEdgeCalibrationUI>();
+            SetPrivateField(calibrationUI, "_doorCoordinateSystem", coordinateSystem);
+            SetPrivateField(calibrationUI, "_doorGeometry", geometryState);
+            SetPrivateField(calibrationUI, "_startButton", startButton);
+            SetPrivateField(calibrationUI, "_statusText", calibStatus);
+            SetPrivateField(calibrationUI, "_measurementInputField", measurementField);
+            SetPrivateField(calibrationUI, "_confirmButton", confirmButton);
+            AssignMaterialIfPresent(calibrationUI, "_markerMaterialTemplate", "Assets/_Project/Materials/DoorPnPMarker.mat");
+
+            // ── Hinge side panel ──
+            var hingeHost = FindOrCreateFullStretchChild(arScanRoot.transform, "DoorHingeSideUI_Host");
+            var hingeStatus = FindOrCreateUIText(hingeHost.transform, "HingeStatusText", "Hinge: not confirmed");
+            var hingeStatusRect = hingeStatus.GetComponent<RectTransform>();
+            hingeStatusRect.sizeDelta = new Vector2(600, 60);
+            hingeStatusRect.anchoredPosition = new Vector2(0, -440);
+            var hingeLeftButton = FindOrCreateUIButton(hingeHost.transform, "HingeLeftButton", "Hinge Left");
+            hingeLeftButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-90, -500);
+            var hingeRightButton = FindOrCreateUIButton(hingeHost.transform, "HingeRightButton", "Hinge Right");
+            hingeRightButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(90, -500);
+
+            var hingeUI = rig.CameraGO.GetComponent<DoorHingeSideUI>();
+            if (hingeUI == null) hingeUI = rig.CameraGO.AddComponent<DoorHingeSideUI>();
+            SetPrivateField(hingeUI, "_doorGeometry", geometryState);
+            SetPrivateField(hingeUI, "_hingeLeftButton", hingeLeftButton);
+            SetPrivateField(hingeUI, "_hingeRightButton", hingeRightButton);
+            SetPrivateField(hingeUI, "_statusText", hingeStatus);
+
+            Debug.Log("[AayamSceneBootstrapper] DoorEdgeCalibrationUI + DoorHingeSideUI attached to " +
+                      $"'{rig.CameraGO.name}', panels wired inside Screen_ARScan. See " +
+                      "docs/phases/phase-4-implementation-plan.md for verification history.");
         }
 
         // ─── Generic Helpers ────────────────────────────────────────────
@@ -714,6 +793,36 @@ namespace Aayam.Editor
                 SetTextRect(text, Vector2.zero, Vector2.one);
             }
             return button;
+        }
+
+        private static InputField FindOrCreateUIInputField(Transform parent, string name, string placeholder)
+        {
+            Transform existing = parent.Find(name);
+            if (existing != null) return existing.GetComponent<InputField>();
+
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(240, 60);
+
+            var image = go.AddComponent<Image>();
+            image.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            var textGo = new GameObject("Text", typeof(RectTransform));
+            textGo.transform.SetParent(go.transform, worldPositionStays: false);
+            var text = textGo.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.color = Color.black;
+            text.alignment = TextAnchor.MiddleCenter;
+            SetTextRect(text, Vector2.zero, Vector2.one);
+
+            var field = go.AddComponent<InputField>();
+            field.textComponent = text;
+            field.contentType = InputField.ContentType.DecimalNumber;
+            field.placeholder = FindOrCreateUIText(go.transform, "Placeholder", placeholder);
+            SetTextRect((Text)field.placeholder, Vector2.zero, Vector2.one);
+            ((Text)field.placeholder).color = new Color(0f, 0f, 0f, 0.4f);
+            return field;
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)

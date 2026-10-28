@@ -46,6 +46,10 @@ namespace Aayam.AR.Planes
         [Header("Dependencies")]
         [SerializeField] private VisualDoorSegmenter _segmenter;
         [SerializeField] private DoorCoordinateSystem _coordinateSystem;
+        // 2026-10-25, Phase 4 Step 3 wiring: the live door-geometry holder
+        // ObjectPlacementController reads for zone-clamped placement -
+        // optional (null-checked below) so this keeps working standalone.
+        [SerializeField] private DoorGeometryState _geometryState;
 
         [Header("Assumed real-world door size (roadmap standard sizes)")]
         [SerializeField] private float _assumedDoorWidthMeters = 0.9f;
@@ -141,6 +145,8 @@ namespace Aayam.AR.Planes
                 Debug.Log($"[DoorPnPWorldAnchor] PnP failed: {pnp.FailReason}");
                 return;
             }
+
+            _geometryState?.SetGeometry(w, h);
 
             // 2026-10-24: DoorPnPSolver.RotatedFrameCorrection (an extra
             // +90deg rotation applied here since 2026-10-15) is REMOVED -

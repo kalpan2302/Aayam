@@ -73,5 +73,59 @@ namespace Aayam.Tests.EditMode
             Assert.AreEqual(2, DoorComponentZones.StandardSizes.Length);
             Assert.AreEqual(5, DoorComponentZones.StandardThicknessesMeters.Length);
         }
+
+        [TestCase("handle", DoorComponentZones.ZoneType.Handle)]
+        [TestCase("Handle", DoorComponentZones.ZoneType.Handle)]
+        [TestCase("lock", DoorComponentZones.ZoneType.Lock)]
+        [TestCase("peephole", DoorComponentZones.ZoneType.Peephole)]
+        [TestCase("hinge", DoorComponentZones.ZoneType.Hinge)]
+        public void TryMapProductCategory_KnownCategories_MapCorrectly(string category, DoorComponentZones.ZoneType expected)
+        {
+            Assert.IsTrue(DoorComponentZones.TryMapProductCategory(category, out var zoneType));
+            Assert.AreEqual(expected, zoneType);
+        }
+
+        [TestCase("accessory")]
+        [TestCase("")]
+        [TestCase((string)null)]
+        [TestCase("shelf")]
+        public void TryMapProductCategory_UnknownOrEmpty_ReturnsFalse(string category)
+        {
+            Assert.IsFalse(DoorComponentZones.TryMapProductCategory(category, out _));
+        }
+
+        [Test]
+        public void ClampToZone_PointInsideZone_IsUnchanged()
+        {
+            var z = DoorComponentZones.HandleZone;
+            var p = new Vector2(0.72f, 1.0f);
+            Assert.AreEqual(p, DoorComponentZones.ClampToZone(p, z));
+        }
+
+        [Test]
+        public void ClampToZone_PointOutsideEachAxis_ClampsToNearestEdge()
+        {
+            var z = DoorComponentZones.HandleZone;
+            Assert.AreEqual(new Vector2(0.680f, 1.0f), DoorComponentZones.ClampToZone(new Vector2(0.1f, 1.0f), z));
+            Assert.AreEqual(new Vector2(0.770f, 1.0f), DoorComponentZones.ClampToZone(new Vector2(2.0f, 1.0f), z));
+            Assert.AreEqual(new Vector2(0.72f, 0.950f), DoorComponentZones.ClampToZone(new Vector2(0.72f, 0f), z));
+            Assert.AreEqual(new Vector2(0.72f, 1.050f), DoorComponentZones.ClampToZone(new Vector2(0.72f, 2f), z));
+        }
+
+        [Test]
+        public void ClampToZone_PointOutsideBothAxes_ClampsCorner()
+        {
+            var z = DoorComponentZones.HandleZone;
+            Assert.AreEqual(new Vector2(0.680f, 0.950f), DoorComponentZones.ClampToZone(new Vector2(-1f, -1f), z));
+        }
+
+        [Test]
+        public void ClampToZone_DegenerateZone_CollapsesToSingleValue()
+        {
+            // Peephole's X is a single value (MinX==MaxX), not a range.
+            var z = DoorComponentZones.PeepholeZone(0.9f);
+            var clamped = DoorComponentZones.ClampToZone(new Vector2(0f, 1.5f), z);
+            Assert.AreEqual(0.45f, clamped.x, 1e-6f);
+        }
     }
 }

@@ -229,7 +229,13 @@ namespace Aayam.Services
             if (model != null) Destroy(model);
         }
 
-        private GameObject CreatePlaceholderCube()
+        /// <summary>
+        /// Public since 2026-10-25 - ProductSelector's stub-data path (no
+        /// backend/model to load at all) reuses this rather than duplicating
+        /// the "CreatePrimitive + assign _placeholderMaterialTemplate, not
+        /// the default material" pattern a second time.
+        /// </summary>
+        public GameObject CreatePlaceholderCube()
         {
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = "Placeholder_Model";

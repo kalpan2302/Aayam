@@ -92,6 +92,40 @@ namespace Aayam.AR.Planes
         }
 
         /// <summary>
+        /// 2026-10-25, Phase 4 Step 3 wiring: maps ProductData.Category
+        /// (the backend's free-text field, e.g. "handle"/"lock"/"accessory" -
+        /// see ProductData.cs's own comment) to a ZoneType, so
+        /// ObjectPlacementController can decide whether a product being
+        /// placed is a door accessory that should be zone-clamped. Returns
+        /// false for "accessory" and anything else unrecognized - those
+        /// products place exactly where aimed, unchanged from today.
+        /// </summary>
+        public static bool TryMapProductCategory(string category, out ZoneType zoneType)
+        {
+            switch (category?.Trim().ToLowerInvariant())
+            {
+                case "handle": zoneType = ZoneType.Handle; return true;
+                case "lock": zoneType = ZoneType.Lock; return true;
+                case "peephole": zoneType = ZoneType.Peephole; return true;
+                case "hinge": zoneType = ZoneType.Hinge; return true;
+                default: zoneType = default; return false;
+            }
+        }
+
+        /// <summary>
+        /// Clamps a door-space point into a zone's bounds, per axis
+        /// independently. For a degenerate zone (MinX==MaxX, e.g. Peephole/
+        /// Hinge's documented single-value X), this collapses that axis to
+        /// the single value - the intended behavior, not a special case.
+        /// </summary>
+        public static Vector2 ClampToZone(Vector2 doorSpacePoint, Zone zone)
+        {
+            return new Vector2(
+                Mathf.Clamp(doorSpacePoint.x, zone.MinX, zone.MaxX),
+                Mathf.Clamp(doorSpacePoint.y, zone.MinY, zone.MaxY));
+        }
+
+        /// <summary>
         /// Roadmap: Standard Door Dimensions (Indian Context) - width/height
         /// pairs, meters. Same table DoorPnPWorldAnchor's own doc comment
         /// points at for its "assumed door size" default.
