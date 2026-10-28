@@ -210,9 +210,9 @@ namespace Aayam.UI
         /// <summary>Called externally when a product has been selected and placement should start.
         /// anchorHeightMm is the product's standard mounting height from the floor (mm),
         /// or -1 if unknown - see DoorSurfacePlacer.SnapToStandardHeight.</summary>
-        public void BeginPlacementFor(GameObject prefab, string productId, float anchorHeightMm = -1f)
+        public void BeginPlacementFor(GameObject prefab, string productId, float anchorHeightMm = -1f, string productCategory = "")
         {
-            _placementController?.StartPlacement(prefab, productId, anchorHeightMm);
+            _placementController?.StartPlacement(prefab, productId, anchorHeightMm, productCategory);
             _isPlacingMode = true;
             SetPlaceButtonLabel("Cancel");
             UpdateStatus("Aim at door and tap to place");

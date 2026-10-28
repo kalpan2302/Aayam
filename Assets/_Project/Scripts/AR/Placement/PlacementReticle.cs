@@ -21,6 +21,15 @@ namespace Aayam.AR.Placement
         [SerializeField] private GameObject _reticlePrefab;
         [SerializeField] private Color      _validColor   = new Color(0.2f, 1f, 0.4f, 0.9f);
         [SerializeField] private Color      _invalidColor = new Color(1f, 0.3f, 0.3f, 0.9f);
+        // Serialized asset reference, not a bare CreatePrimitive default -
+        // found 2026-10-21 that this fallback sphere (used whenever
+        // _reticlePrefab is unassigned, which is this scene's actual
+        // configuration) had no explicit shader at all, same root issue as
+        // DoorPnPWorldAnchor's marker and HandleWorldAnchorRefiner's -
+        // CreatePrimitive's default material under this project's Built-in
+        // RP (no URP installed) showed as the "missing shader" fallback,
+        // defeating the green/red MaterialPropertyBlock tint entirely.
+        [SerializeField] private Material _reticleMaterialTemplate;
 
         [Header("Settings")]
         [SerializeField] private float _maxDistance     = 4.0f;
@@ -57,6 +66,13 @@ namespace Aayam.AR.Placement
                 _reticleInstance.transform.localScale = Vector3.one * 0.05f;
                 Destroy(_reticleInstance.GetComponent<Collider>());
                 _reticleRenderer = _reticleInstance.GetComponent<MeshRenderer>();
+                if (_reticleMaterialTemplate != null)
+                    _reticleRenderer.material = new Material(_reticleMaterialTemplate);
+                else
+                    Debug.LogWarning("[PlacementReticle] _reticleMaterialTemplate not assigned - " +
+                                      "falling back to CreatePrimitive's default material, which has " +
+                                      "shown as the missing-shader fallback on this project before. " +
+                                      "Assign Assets/_Project/Materials/ReticleDefault.mat.");
                 _propBlock = new MaterialPropertyBlock();
                 _reticleInstance.SetActive(false);
             }

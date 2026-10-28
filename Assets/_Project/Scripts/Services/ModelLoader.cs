@@ -32,6 +32,15 @@ namespace Aayam.Services
         [SerializeField] private int  _anisotropicFilterLevel = 3;
         [SerializeField] private int  _downloadTimeoutSec     = 30;
 
+        // Serialized asset reference, not CreatePrimitive's bare default
+        // material - same root issue found project-wide 2026-10-21
+        // (DoorPnPWorldAnchor, PlacementReticle, HandleWorldAnchorRefiner
+        // all had it too): this project has no render pipeline package
+        // installed, and CreatePrimitive's default material has repeatedly
+        // shown as the "missing shader" fallback rather than anything
+        // readable. Assign Assets/_Project/Materials/PlaceholderCube.mat.
+        [SerializeField] private Material _placeholderMaterialTemplate;
+
         // ─── Lifecycle ────────────────────────────────────────────
 
         private void Awake()
@@ -220,11 +229,29 @@ namespace Aayam.Services
             if (model != null) Destroy(model);
         }
 
-        private static GameObject CreatePlaceholderCube()
+        /// <summary>
+        /// Public since 2026-10-25 - ProductSelector's stub-data path (no
+        /// backend/model to load at all) reuses this rather than duplicating
+        /// the "CreatePrimitive + assign _placeholderMaterialTemplate, not
+        /// the default material" pattern a second time.
+        /// </summary>
+        public GameObject CreatePlaceholderCube()
         {
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = "Placeholder_Model";
             cube.transform.localScale = Vector3.one * 0.1f;   // 10cm cube
+
+            if (_placeholderMaterialTemplate != null)
+            {
+                var renderer = cube.GetComponent<MeshRenderer>();
+                renderer.material = new Material(_placeholderMaterialTemplate);
+            }
+            else
+            {
+                Debug.LogWarning("[ModelLoader] _placeholderMaterialTemplate not assigned - " +
+                                  "falling back to CreatePrimitive's default material.");
+            }
+
             return cube;
         }
     }

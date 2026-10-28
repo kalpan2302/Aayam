@@ -33,10 +33,19 @@ namespace Aayam.AR.Placement
         [Header("Configuration")]
         [SerializeField] private int _maxObjects = 5;
 
+        // 2026-10-25, Phase 4 Step 3 wiring: zone-aware placement for door
+        // accessory products (handle/lock/peephole/hinge categories). Both
+        // optional (null-checked below) - without them, placement is
+        // completely unchanged from today for every product.
+        [Header("Door Zone Wiring (optional)")]
+        [SerializeField] private DoorCoordinateSystem _doorCoordinateSystem;
+        [SerializeField] private DoorGeometryState _doorGeometry;
+
         // ─── Private State ────────────────────────────────────────
         private GameObject _pendingPrefab;
         private string     _pendingProductId;
         private float       _pendingAnchorHeightMm = -1f;
+        private string      _pendingProductCategory = "";
         private readonly List<PlacedProduct> _placedObjects = new();
 
         // ─── Start Placement ──────────────────────────────────────
@@ -50,7 +59,7 @@ namespace Aayam.AR.Placement
         /// unknown - see DoorSurfacePlacer.SnapToStandardHeight.
         /// The user will aim the reticle and tap to place.
         /// </summary>
-        public void StartPlacement(GameObject prefab, string productId = "", float anchorHeightMm = -1f)
+        public void StartPlacement(GameObject prefab, string productId = "", float anchorHeightMm = -1f, string productCategory = "")
         {
             if (_placedObjects.Count >= _maxObjects)
             {
@@ -61,6 +70,7 @@ namespace Aayam.AR.Placement
             _pendingPrefab          = prefab;
             _pendingProductId       = productId;
             _pendingAnchorHeightMm  = anchorHeightMm;
+            _pendingProductCategory = productCategory;
             CurrentState            = PlacementState.Aiming;
 
             _reticle?.Show();
@@ -113,10 +123,43 @@ namespace Aayam.AR.Placement
                 ? _doorPlacer.CalculatePlacementPose(rawPose)
                 : rawPose;
 
-            // 1b. Snap vertical height to this product's real anchor_y_mm, if
+            // 1b. Phase 4 Step 3: if this product is a door accessory
+            // (handle/lock/peephole/hinge category) and the door's origin +
+            // geometry are both known, clamp the tapped position into that
+            // component's valid zone - the user still aims and taps exactly
+            // as before, this just corrects the final position rather than
+            // replacing it with ProductAutoPlacer's zone-center (preserves
+            // user intent - e.g. picking an exact handle height within its
+            // 100mm band - while still guaranteeing a physically valid
+            // placement). Skips the generic floor-relative height snap below
+            // for these products: the zone's Y-range is the correct, tighter
+            // constraint and the two would otherwise fight.
+            bool zoneClamped = false;
+            if (_doorCoordinateSystem != null && _doorCoordinateSystem.HasOrigin &&
+                _doorGeometry != null && _doorGeometry.HasGeometry &&
+                DoorComponentZones.TryMapProductCategory(_pendingProductCategory, out var zoneType))
+            {
+                Vector3 doorSpace = _doorCoordinateSystem.WorldToDoorSpace(finalPose.position);
+                Vector2 clamped = DoorComponentZones.ClampToZone(
+                    new Vector2(doorSpace.x, doorSpace.y),
+                    DoorComponentZones.GetZone(zoneType, _doorGeometry.DoorWidthMeters,
+                        _doorGeometry.DoorHeightMeters, _doorGeometry.OpeningDirection.HingeOnLeft));
+                Vector3 clampedDoorSpace = new Vector3(clamped.x, clamped.y, doorSpace.z);
+                finalPose.position = _doorCoordinateSystem.DoorToWorldSpace(clampedDoorSpace);
+                zoneClamped = true;
+
+                var validation = ProductPlacementValidator.Validate(clampedDoorSpace, zoneType,
+                    _doorGeometry.DoorWidthMeters, _doorGeometry.DoorHeightMeters, _doorGeometry.OpeningDirection.HingeOnLeft);
+                Debug.Log($"[Placement] Zone-clamped '{_pendingProductCategory}' to {zoneType}: " +
+                          $"tapped doorSpace={doorSpace:F3} -> clamped={clampedDoorSpace:F3} " +
+                          $"(validate Ok={validation.Ok} {validation.Reason})");
+            }
+
+            // 1c. Snap vertical height to this product's real anchor_y_mm, if
             // known and a floor reference has been detected (Phase 2 Step 7).
-            // Horizontal position stays wherever the user aimed.
-            if (_doorPlacer != null && _floorDetector != null && _floorDetector.HasFloor)
+            // Horizontal position stays wherever the user aimed. Skipped for
+            // zone-clamped products (1b already picked the correct height).
+            if (!zoneClamped && _doorPlacer != null && _floorDetector != null && _floorDetector.HasFloor)
             {
                 finalPose = _doorPlacer.SnapToStandardHeight(
                     finalPose, _floorDetector.FloorWorldPosition, _pendingAnchorHeightMm);
@@ -134,6 +177,16 @@ namespace Aayam.AR.Placement
             // 3. Instantiate product
             var instance = Instantiate(_pendingPrefab, finalPose.position, finalPose.rotation);
             instance.name = $"Product_{_pendingProductId}_{_placedObjects.Count}";
+            // Instantiate() preserves the source's active state onto the
+            // clone - callers routinely hand this a template they've
+            // deliberately deactivated (ProductSelector.LoadAndPlaceAsync's
+            // loaded model, ProductSelector.CreatePlaceholderModelPrefab's
+            // stub), so without this the PLACED instance would silently
+            // inherit that and never render. Found 2026-10-25 while
+            // building an on-device test path for Phase 4 Step 3's zone
+            // wiring - confirmed via grep that nothing anywhere in this
+            // class or AnchorController ever reactivated a placed instance.
+            instance.SetActive(true);
 
             // 4. Attach to anchor
             _anchorController.AttachObjectToAnchor(instance, anchor);

@@ -36,6 +36,40 @@ namespace Aayam.AR.Planes
             public float WidthPx, HeightPx;
             public bool IsLeftHandled;
             public bool HandleFound;
+
+            /// <summary>Handle position as a (u,v) fraction within the door
+            /// quad (u: left=0..right=1, v: top=0..bottom=1) - scale- and
+            /// shape-independent. See DoorGeometryExtractor.DoorGeometry.</summary>
+            public Vector2 HandleNormalized;
+
+            // ─── Phase 4 Step 1, Option B: everything DoorPnPWorldAnchor
+            // needs to recover world-space pose, captured/computed at the
+            // SAME frame as the corners above - not re-read later, which is
+            // the exact timing gap that undermined Phase 3's
+            // HandleWorldAnchorRefiner verification.
+
+            /// <summary>Door corners in mask-space pixels (MaskWidth x MaskHeight), same order DoorGeometryExtractor returns: TL,TR,BR,BL.</summary>
+            public Vector2 TopLeftPx, TopRightPx, BottomRightPx, BottomLeftPx;
+            public int MaskWidth, MaskHeight;
+
+            public bool HasCameraPose;
+            public Vector3 CameraPositionAtCapture;
+            public Quaternion CameraRotationAtCapture;
+
+            /// <summary>Raw (pre-rotation) camera intrinsics and resolution, captured synchronously in OnCameraFrameReceived.</summary>
+            public bool HasIntrinsics;
+            public float RawFx, RawFy, RawCx, RawCy;
+            public int RawWidth, RawHeight;
+
+            /// <summary>
+            /// True if ARCameraManager.TryGetIntrinsics's resolution didn't
+            /// match the actual captured CPU image, so RawFx/Fy/Cx/Cy above
+            /// were proportionally corrected rather than used as-reported -
+            /// see OnCameraFrameReceived. Surfaced here so it's visible
+            /// on-device (DoorPnPDebugLabel) without needing console access.
+            /// </summary>
+            public bool IntrinsicsResolutionMismatch;
+            public Vector2Int IntrinsicsReportedResolution;
         }
 
         [Header("Model")]
@@ -52,14 +86,17 @@ namespace Aayam.AR.Planes
         public event Action<DoorResult> OnDoorGeometry;
 
         private ARCameraManager _cameraManager;
+        private Camera _arCamera;
         private Worker _worker;
         private Texture2D _frameTexture;
         private int _frameCounter;
         private bool _isInferring;
+        private bool _loggedFovDiagnosticOnce;
 
         private void Awake()
         {
             _cameraManager = GetComponent<ARCameraManager>();
+            _arCamera = GetComponent<Camera>();
         }
 
         private void OnEnable()
@@ -105,6 +142,14 @@ namespace Aayam.AR.Planes
             if (!_cameraManager.TryAcquireLatestCpuImage(out XRCpuImage image))
                 return;
 
+            // Captured synchronously, same instant as the frame used for
+            // inference below - NOT re-read after the async inference
+            // completes, which is the timing gap Phase 3's
+            // HandleWorldAnchorRefiner verification got burned by.
+            bool hasIntrinsics = _cameraManager.TryGetIntrinsics(out var intrinsics);
+            Vector3 cameraPositionAtCapture = transform.position;
+            Quaternion cameraRotationAtCapture = transform.rotation;
+
             int width, height;
             byte[] rgba;
             using (image)
@@ -130,6 +175,7 @@ namespace Aayam.AR.Planes
                 }
             }
 
+            int rawWidth = width, rawHeight = height;
             rgba = RotateRgba90Clockwise(rgba, width, height, out int rotatedWidth, out int rotatedHeight);
             width = rotatedWidth;
             height = rotatedHeight;
@@ -142,7 +188,128 @@ namespace Aayam.AR.Planes
             _frameTexture.LoadRawTextureData(rgba);
             _frameTexture.Apply();
 
-            _ = RunInferenceAsync(_frameTexture, width, height);
+            float rawFx = intrinsics.focalLength.x;
+            float rawFy = intrinsics.focalLength.y;
+            float rawCx = intrinsics.principalPoint.x;
+            float rawCy = intrinsics.principalPoint.y;
+
+            // ARCameraManager.TryGetIntrinsics's focalLength/principalPoint are
+            // calibrated for intrinsics.resolution - AR Foundation's contract
+            // does NOT guarantee that matches the CPU image actually acquired
+            // above (rawWidth x rawHeight), and this codebase never checked
+            // before 2026-10-21. A mismatch here scales the recovered PnP pose
+            // by the resolution ratio - the exact symptom found on-device that
+            // day (DoorPnPWorldAnchor's marker landed further from the real
+            // door the farther the camera stood back, converging toward
+            // roughly correct up close), after the rotation-frame math, the
+            // assumed door size, and the mask-to-frame scaling were all
+            // independently verified correct via synthetic ground-truth tests
+            // and ruled out. Scaling Fx/Fy/Cx/Cy proportionally here is the
+            // standard correction - NOT yet confirmed on-device as the actual
+            // fix (no console access at the time), so treat as the leading
+            // hypothesis until re-tested, not a confirmed resolution.
+            bool resolutionMismatch = hasIntrinsics && intrinsics.resolution.x > 0 && intrinsics.resolution.y > 0 &&
+                                       (intrinsics.resolution.x != rawWidth || intrinsics.resolution.y != rawHeight);
+            if (resolutionMismatch)
+            {
+                float ratioX = (float)rawWidth / intrinsics.resolution.x;
+                float ratioY = (float)rawHeight / intrinsics.resolution.y;
+                rawFx *= ratioX;
+                rawCx *= ratioX;
+                rawFy *= ratioY;
+                rawCy *= ratioY;
+            }
+
+            // AR Foundation never syncs Camera.fieldOfView to the real device
+            // intrinsics on its own - it defaults to whatever was set in the
+            // Inspector (Unity's new-Camera default, 60 deg) regardless of
+            // the actual lens. Found 2026-10-21: the cyan marker's recovered
+            // world position checked out (camera-local angle to the door was
+            // only ~22-33 deg off axis, well inside a real phone lens), yet
+            // Camera.main.WorldToViewportPoint() put it at viewport X
+            // ~1.3-1.5 - a camera rendering with a narrower FOV than the real
+            // lens pushes real, on-camera points outside Unity's render.
+            // rawFx is calibrated against the sensor's native (landscape)
+            // width axis; after RotateRgba90Clockwise, that axis becomes the
+            // portrait screen's VERTICAL axis, which is what
+            // Camera.fieldOfView means in Unity.
+            if (hasIntrinsics && _arCamera != null && rawFx > 0f)
+            {
+                _arCamera.fieldOfView = ComputeVerticalFieldOfViewDegrees(rawWidth, rawFx);
+
+                // 2026-10-22 [FOVDIAG] confirmed cameraAspect was still 0.46
+                // (Unity's screen-tracked default, Screen=1206x2622) while the
+                // PnP/azimuth math is computed in the raw capture's rotated
+                // aspect (rawHeight/rawWidth = 1440/1920 = 0.75) - the two
+                // disagreeing means Unity's camera frustum is narrower than
+                // the space the recovered world position was solved in,
+                // pushing real on-screen points outside the render. Setting
+                // Camera.aspect explicitly (it stops auto-tracking Screen's
+                // aspect once assigned) matches the two spaces.
+                _arCamera.aspect = (float)rawHeight / rawWidth;
+
+                // One-time diagnostic (2026-10-22): the FOV fix's own math
+                // checked out synthetically, but the marker was still
+                // reported off-screen after it shipped, by a much smaller
+                // margin than before. Logging Camera.aspect/Screen size here
+                // rather than assuming them, since the raw capture (1920x1440,
+                // confirmed via ARKit's own videoFormat log) is a much boxier
+                // aspect than any iPhone's actual elongated screen - whichever
+                // one Camera.aspect is actually tracking at runtime decides
+                // whether this fix's remaining gap is an aspect mismatch or
+                // something else.
+                if (!_loggedFovDiagnosticOnce)
+                {
+                    _loggedFovDiagnosticOnce = true;
+                    Debug.Log($"[FOVDIAG] appliedFieldOfView={_arCamera.fieldOfView:F2} cameraAspect={_arCamera.aspect:F4} " +
+                               $"Screen=({Screen.width}x{Screen.height}) rawWidth={rawWidth} rawHeight={rawHeight} rawFx={rawFx:F2} rawFy={rawFy:F2}");
+                }
+            }
+
+            var capture = new CaptureContext
+            {
+                HasCameraPose = true,
+                CameraPosition = cameraPositionAtCapture,
+                CameraRotation = cameraRotationAtCapture,
+                HasIntrinsics = hasIntrinsics,
+                RawFx = rawFx,
+                RawFy = rawFy,
+                RawCx = rawCx,
+                RawCy = rawCy,
+                RawWidth = rawWidth,
+                RawHeight = rawHeight,
+                IntrinsicsResolutionMismatch = resolutionMismatch,
+                IntrinsicsReportedResolution = hasIntrinsics ? intrinsics.resolution : Vector2Int.zero,
+            };
+
+            _ = RunInferenceAsync(_frameTexture, width, height, capture);
+        }
+
+        /// <summary>Everything about the source frame that OnDoorGeometry's consumers need but the inference pipeline itself doesn't - captured once, synchronously, and threaded through unchanged.</summary>
+        private struct CaptureContext
+        {
+            public bool HasCameraPose;
+            public Vector3 CameraPosition;
+            public Quaternion CameraRotation;
+            public bool HasIntrinsics;
+            public float RawFx, RawFy, RawCx, RawCy;
+            public int RawWidth, RawHeight;
+            public bool IntrinsicsResolutionMismatch;
+            public Vector2Int IntrinsicsReportedResolution;
+        }
+
+        /// <summary>
+        /// Vertical FOV (Unity's Camera.fieldOfView convention) implied by a
+        /// sensor-width axis of <paramref name="sensorWidthPx"/> pixels and a
+        /// focal length of <paramref name="focalLengthPx"/> pixels along that
+        /// same axis. Pure math, no Unity camera/AR dependency, so it can be
+        /// verified synthetically - see OnCameraFrameReceived for why the
+        /// sensor's WIDTH axis (not height) maps to Unity's portrait-screen
+        /// VERTICAL fieldOfView after the 90-degree frame rotation.
+        /// </summary>
+        public static float ComputeVerticalFieldOfViewDegrees(float sensorWidthPx, float focalLengthPx)
+        {
+            return 2f * Mathf.Atan(sensorWidthPx / (2f * focalLengthPx)) * Mathf.Rad2Deg;
         }
 
         private static byte[] RotateRgba90Clockwise(byte[] src, int width, int height, out int newWidth, out int newHeight)
@@ -171,7 +338,7 @@ namespace Aayam.AR.Planes
 
         // ─── Inference ────────────────────────────────────────────
 
-        private async System.Threading.Tasks.Task RunInferenceAsync(Texture2D texture, int srcWidth, int srcHeight)
+        private async System.Threading.Tasks.Task RunInferenceAsync(Texture2D texture, int srcWidth, int srcHeight, CaptureContext capture)
         {
             _isInferring = true;
             Tensor<float> inputTensor = null;
@@ -187,7 +354,7 @@ namespace Aayam.AR.Planes
                 using var detCpu = await detOutput.ReadbackAndCloneAsync();
                 using var protoCpu = await protoOutput.ReadbackAndCloneAsync();
 
-                var result = PostProcess(detCpu, protoCpu, srcWidth, srcHeight);
+                var result = PostProcess(detCpu, protoCpu, srcWidth, srcHeight, capture);
                 if (result.HasValue)
                     OnDoorGeometry?.Invoke(result.Value);
             }
@@ -212,7 +379,7 @@ namespace Aayam.AR.Planes
             public float[] MaskCoeffs;
         }
 
-        private DoorResult? PostProcess(Tensor<float> det, Tensor<float> proto, int srcWidth, int srcHeight)
+        private DoorResult? PostProcess(Tensor<float> det, Tensor<float> proto, int srcWidth, int srcHeight, CaptureContext capture)
         {
             var detData = det.DownloadToArray(); // (38, 8400) flattened, channel-major
             var candidates = new System.Collections.Generic.List<Candidate>();
@@ -295,6 +462,25 @@ namespace Aayam.AR.Planes
                 HeightPx = geo.HeightPx,
                 IsLeftHandled = geo.IsLeftHandled,
                 HandleFound = bestHandle != null,
+                HandleNormalized = geo.HandleNormalized,
+                TopLeftPx = geo.TopLeft,
+                TopRightPx = geo.TopRight,
+                BottomRightPx = geo.BottomRight,
+                BottomLeftPx = geo.BottomLeft,
+                MaskWidth = targetMaskWidth,
+                MaskHeight = targetMaskHeight,
+                HasCameraPose = capture.HasCameraPose,
+                CameraPositionAtCapture = capture.CameraPosition,
+                CameraRotationAtCapture = capture.CameraRotation,
+                HasIntrinsics = capture.HasIntrinsics,
+                RawFx = capture.RawFx,
+                RawFy = capture.RawFy,
+                RawCx = capture.RawCx,
+                RawCy = capture.RawCy,
+                RawWidth = capture.RawWidth,
+                RawHeight = capture.RawHeight,
+                IntrinsicsResolutionMismatch = capture.IntrinsicsResolutionMismatch,
+                IntrinsicsReportedResolution = capture.IntrinsicsReportedResolution,
             };
         }
 

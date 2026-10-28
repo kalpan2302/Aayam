@@ -30,6 +30,17 @@ namespace Aayam.UI
         public string    ModelUrl;
         public string    Sku;
         public float      AnchorYMm = -1f;   // height from floor, mm; -1 = no anchor data
+
+        // 2026-10-25, Phase 4 Step 3 wiring: free-text category
+        // ("handle"/"lock"/"peephole"/"hinge"/"accessory"), sourced from the
+        // list endpoint's ProductSummary.CategoryName (see Start() below) -
+        // NOT from ProductDetailDto, which has no category field at all, so
+        // this can't be re-derived at LoadAndPlaceAsync time. Empty for the
+        // QR-scan path (SelectProductBySku never has a ProductUIItem to read
+        // this from) - DoorComponentZones.TryMapProductCategory treats
+        // empty/unrecognized the same as "not a door accessory", so that
+        // path keeps today's unconstrained placement behavior, unchanged.
+        public string    Category;
     }
 
     // â”€â”€â”€ Product Selector (scroll list) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -101,6 +112,7 @@ namespace Aayam.UI
                             Sku                 = s.Sku,
                             Name                = s.Name,
                             Brand               = s.BrandName,
+                            Category            = s.CategoryName,
                             PriceFormatted      = FormatPrice(s.Price, s.Currency),
                             CompatibilityLabel  = s.Has3DModel ? "" : "No 3D model yet",
                             CompatibilityColor  = s.Has3DModel ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.6f, 0.2f),
@@ -173,27 +185,32 @@ namespace Aayam.UI
             // Design-time override takes priority - skip the network entirely.
             if (item.ModelPrefab != null)
             {
-                _hud?.BeginPlacementFor(item.ModelPrefab, item.ProductId, item.AnchorYMm);
+                _hud?.BeginPlacementFor(item.ModelPrefab, item.ProductId, item.AnchorYMm, item.Category);
                 return;
             }
 
             string sku = !string.IsNullOrEmpty(item.Sku) ? item.Sku : item.ProductId;
-            await LoadAndPlaceAsync(sku);
+            await LoadAndPlaceAsync(sku, item.Category);
         }
 
         /// <summary>Entry point for selection paths that don't go through a
         /// catalogue card - currently the QR scanner (decoded "aayam://product/{sku}"
         /// link via DeepLinkParser). Does the same fetch -> download -> place
-        /// flow as tapping a card.</summary>
+        /// flow as tapping a card. No ProductUIItem exists for this path, so
+        /// there's no category to pass through - see LoadAndPlaceAsync's
+        /// categoryOverride doc.</summary>
         public async void SelectProductBySku(string sku)
         {
-            await LoadAndPlaceAsync(sku);
+            await LoadAndPlaceAsync(sku, "");
         }
 
         /// <summary>Fetch full detail (list items don't carry model_url/anchor
         /// data - only the detail endpoint does), download the GLB, then begin
-        /// placement with an already-loaded instance.</summary>
-        private async Task LoadAndPlaceAsync(string sku)
+        /// placement with an already-loaded instance. categoryOverride comes
+        /// from the ORIGINAL list-level ProductUIItem (ProductDetailDto has no
+        /// category field to re-derive it from here), or "" for callers that
+        /// never had one (QR scan).</summary>
+        private async Task LoadAndPlaceAsync(string sku, string categoryOverride)
         {
             Aayam.Models.ProductData detail = null;
             try { detail = await _apiService.FetchProductDetailAsync(sku); }
@@ -227,7 +244,7 @@ namespace Aayam.UI
             instance.SetActive(false);
 
             float anchorYMm = detail.Asset.Anchor?.YMm ?? -1f;
-            _hud?.BeginPlacementFor(instance, sku, anchorYMm);
+            _hud?.BeginPlacementFor(instance, sku, anchorYMm, categoryOverride);
         }
 
         // â”€â”€â”€ Stub Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -236,12 +253,39 @@ namespace Aayam.UI
         {
             var stubs = new List<ProductUIItem>
             {
-                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", PriceFormatted = "₹1,499", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", PriceFormatted = "₹2,299", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   PriceFormatted = "₹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
-                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", PriceFormatted = "₹3,799", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
-                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   PriceFormatted = "₹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
+                new() { ProductId = "HANDLE_001", Name = "Matte Black Handle",  Brand = "Godrej", Category = "handle", PriceFormatted = "₹1,499", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "HANDLE_002", Name = "Brushed Gold Lever",  Brand = "Dorset", Category = "handle", PriceFormatted = "₹2,299", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "LOCK_001",   Name = "Smart Deadbolt",      Brand = "Yale",   Category = "lock",   PriceFormatted = "₹8,999", CompatibilityLabel = "Check bore size",  CompatibilityColor = new Color(1f, 0.7f, 0f) },
+                new() { ProductId = "LOCK_002",   Name = "Mortise Lock Set",    Brand = "Godrej", Category = "lock",   PriceFormatted = "₹3,799", CompatibilityLabel = "✓ Fits your door", CompatibilityColor = new Color(0.2f, 0.8f, 0.2f) },
+                new() { ProductId = "ACCS_001",   Name = "Chrome Door Stopper", Brand = "Ebco",   Category = "accessory", PriceFormatted = "₹299",   CompatibilityLabel = "Universal",        CompatibilityColor = new Color(0.6f, 0.6f, 0.6f) },
             };
+
+            // 2026-10-25: the stub list above only ever populated the catalog
+            // UI - without a backend (or a ModelPrefab override, per that
+            // field's own doc comment), HandleProductSelected/LoadAndPlaceAsync
+            // always failed with "No model available", so placement itself
+            // was never actually testable without a running backend. Reusing
+            // ModelLoader.CreatePlaceholderCube() (now public) for the first
+            // handle stub makes the catalog-to-placed-product flow testable
+            // offline - it already applies _placeholderMaterialTemplate
+            // (PlaceholderCube.mat) instead of CreatePrimitive's default
+            // material, which repeatedly showed as the "missing shader"
+            // magenta fallback on-device elsewhere in this project.
+            if (_modelLoader != null)
+            {
+                var placeholder = _modelLoader.CreatePlaceholderCube();
+                // Not SetActive(false) - ExecutePlacement now explicitly
+                // reactivates every placed clone (fixed 2026-10-25, see its
+                // own comment), but parking the live template far from the
+                // AR origin is simpler than relying on activation state at
+                // all. Instantiate(prefab, position, rotation) overrides the
+                // clone's transform at placement time regardless of where
+                // this template sits, so this is purely to keep it out of
+                // view beforehand.
+                placeholder.transform.position = new Vector3(0f, -500f, 0f);
+                stubs[0].ModelPrefab = placeholder;
+                stubs[0].AnchorYMm = 1000f; // roughly handle height, mm
+            }
 
             Populate(stubs);
         }
