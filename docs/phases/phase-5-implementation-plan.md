@@ -219,13 +219,21 @@ visual feedback, backend sync) are now confirmed working end-to-end, not
 just unit-tested.
 
 **Incident during this pass**: Docker Desktop crashed mid-build
-(`rpc error: code = Unavailable ... EOF`) while building the `api`
-service's image for the first time this session - relaunched it
-(`open -a Docker`), confirmed the daemon came back, then ran the backend
-via the venv's `uvicorn` directly against the already-running `aayam_db`
-container instead of rebuilding the `api` image under time pressure.
-Not a code issue; noted here so a stalled `docker compose up api` isn't
-mysterious later.
+(`rpc error: code = Unavailable ... EOF`) on the first attempt to build
+the `api` service's image this session - relaunched it (`open -a
+Docker`), confirmed the daemon came back, then ran the backend via the
+venv's `uvicorn` directly against the already-running `aayam_db`
+container instead of waiting on a rebuild. A second, later attempt at
+`docker compose up api` (run in the background, checked after the
+on-device test had already finished) failed with a clearer root cause:
+`ResourceExhausted: cannot allocate memory` partway through installing
+`build-essential` in the image. Likely Docker Desktop's VM is memory-
+constrained with this machine's other unrelated repos' containers
+(`command-v2`, `webscrapers`) also running concurrently - not something
+to fix from inside this repo. Not a code issue either way; noted here so
+a stalled/failed `docker compose up api` isn't mysterious later. The
+venv-`uvicorn` path works fine as a substitute whenever this comes up
+again.
 
 ## Stage 4 — Unity: depth-sensor measurement path — code DONE, NOT device-verifiable on this hardware
 
