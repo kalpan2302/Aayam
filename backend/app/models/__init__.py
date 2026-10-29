@@ -20,6 +20,11 @@ from app.models.product import (
     Tag,
     ProductTag,
 )
+from app.models.measurement import (
+    Device,
+    Door,
+    DoorMeasurement,
+)
 
 __all__ = [
     "Base",
@@ -35,4 +40,7 @@ __all__ = [
     "ProductAttribute",
     "Tag",
     "ProductTag",
+    "Device",
+    "Door",
+    "DoorMeasurement",
 ]
