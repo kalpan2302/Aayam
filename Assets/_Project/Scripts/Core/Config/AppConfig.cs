@@ -26,6 +26,19 @@ namespace Aayam.Core.Bootstrap
         public string ApiBaseUrl = "http://localhost:8010";
         public string CdnBaseUrl = "http://localhost:8010";
         public float ApiTimeout = 30f;
+        // 2026-10-29, Phase 5: the backend's verify_api_key dependency
+        // (app/api/deps.py) existed since before Phase 5 but no route
+        // required it until MeasurementApiService's POST endpoints - this
+        // is the first place the Unity client actually needs to send one.
+        // Matches the backend's dev default (app/config.py's Settings.API_KEY)
+        // - change both together if this is ever rotated.
+        public string ApiKey = "dev-api-key-change-me";
+
+        [Header("Measurement")]
+        // Phase 5 Step 7: best-effort backend sync for measurement history -
+        // local save always happens regardless (MeasurementHistoryStore),
+        // this only gates whether it ALSO tries the network call.
+        public bool EnableMeasurementBackendSync = true;
 
         // ─── AR Configuration ─────────────────────────────────────────
         [Header("AR")]

@@ -1,7 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Aayam.AR.Planes;
+using Aayam.Models;
+using Aayam.Services;
 
 namespace Aayam.UI
 {
@@ -47,6 +50,13 @@ namespace Aayam.UI
         private float _measuredSpanMeters;
         private GameObject _leftMarker;
         private GameObject _rightMarker;
+        private LineRenderer _measurementLine;
+        private TextMesh _measurementLabel;
+
+        // One local id per physical door this UI is attached to - reused
+        // across repeated calibration confirms in the same run so their
+        // history chains together (Phase 5 Step 7).
+        private string _doorLocalId;
 
         private void Awake()
         {
@@ -120,10 +130,18 @@ namespace Aayam.UI
                 _rightEdgeWorld = worldPoint;
                 PlaceMarker(ref _rightMarker, worldPoint, Color.yellow);
                 _measuredSpanMeters = DoorEdgeCalibrator.MeasureDoorSpaceSpan(_doorCoordinateSystem, _leftEdgeWorld, _rightEdgeWorld);
+                UpdateMeasurementVisual();
                 _step = CalibrationStep.WaitingForMeasurement;
                 SetStatus($"AR thinks this span is {_measuredSpanMeters:F3}m. " +
                           "Measure it with a tape and enter the real value below, then Confirm.");
             }
+        }
+
+        private void LateUpdate()
+        {
+            if (_measurementLabel == null) return;
+            _measurementLabel.transform.rotation = Quaternion.LookRotation(
+                _measurementLabel.transform.position - _arCamera.transform.position);
         }
 
         private void HandleConfirmClicked()
@@ -154,6 +172,32 @@ namespace Aayam.UI
 
             Debug.Log($"[DoorEdgeCalibrationUI] measuredSpan={_measuredSpanMeters:F4}m enteredMeters={measuredMeters:F4} " +
                       $"scaleCorrection={result.ScaleCorrection:F4} newWidth={_doorGeometry.DoorWidthMeters:F4} newHeight={_doorGeometry.DoorHeightMeters:F4}");
+
+            SaveMeasurementHistory();
+        }
+
+        // ─── Phase 5 Step 7: persist the measurement, local-first ─────
+        // Roadmap's own Step 6 confidence table puts user-assisted
+        // measurements at 85-95%; 0.90 is the point estimate.
+        private const float UserAssistedConfidence = 0.90f;
+
+        private void SaveMeasurementHistory()
+        {
+            _doorLocalId ??= Guid.NewGuid().ToString();
+
+            var entry = new MeasurementHistoryEntry
+            {
+                DoorLocalId = _doorLocalId,
+                TimestampUtc = DateTime.UtcNow.ToString("o"),
+                WidthMm = _doorGeometry.DoorWidthMeters * 1000f,
+                HeightMm = _doorGeometry.DoorHeightMeters * 1000f,
+                WidthConfidence = UserAssistedConfidence,
+                HeightConfidence = UserAssistedConfidence,
+                Source = MeasurementSource.UserAssisted,
+            };
+
+            MeasurementHistoryStore.SaveMeasurement(entry);
+            Debug.Log($"[DoorEdgeCalibrationUI] Saved measurement history: widthMm={entry.WidthMm:F1} heightMm={entry.HeightMm:F1}");
         }
 
         private void PlaceMarker(ref GameObject marker, Vector3 worldPosition, Color color)
@@ -178,6 +222,44 @@ namespace Aayam.UI
                 }
             }
             marker.transform.position = worldPosition;
+        }
+
+        // ─── Visual feedback: measurement line + dimension label ──────
+        // Roadmap Step 4 ("measurement line with dimension") - previously
+        // missing: the two edge markers rendered with no connecting
+        // visual. TextMesh, not Canvas UI - no Canvas needed, matching the
+        // lightweight marker-sphere style already used here; billboarded
+        // toward _arCamera every frame in LateUpdate.
+        private void UpdateMeasurementVisual()
+        {
+            if (_measurementLine == null)
+            {
+                var lineObj = new GameObject("MeasurementLine");
+                _measurementLine = lineObj.AddComponent<LineRenderer>();
+                _measurementLine.positionCount = 2;
+                _measurementLine.startWidth = 0.01f;
+                _measurementLine.endWidth = 0.01f;
+                _measurementLine.material = _markerMaterialTemplate != null
+                    ? new Material(_markerMaterialTemplate)
+                    : new Material(Shader.Find("Sprites/Default"));
+                _measurementLine.startColor = Color.cyan;
+                _measurementLine.endColor = Color.cyan;
+            }
+            _measurementLine.SetPosition(0, _leftEdgeWorld);
+            _measurementLine.SetPosition(1, _rightEdgeWorld);
+
+            if (_measurementLabel == null)
+            {
+                var labelObj = new GameObject("MeasurementLabel");
+                _measurementLabel = labelObj.AddComponent<TextMesh>();
+                _measurementLabel.fontSize = 48;
+                _measurementLabel.characterSize = 0.02f;
+                _measurementLabel.anchor = TextAnchor.MiddleCenter;
+                _measurementLabel.color = Color.cyan;
+            }
+            Vector3 midpoint = (_leftEdgeWorld + _rightEdgeWorld) * 0.5f;
+            _measurementLabel.transform.position = midpoint + Vector3.up * 0.05f;
+            _measurementLabel.text = $"{_measuredSpanMeters:F2}m";
         }
 
         private void SetStatus(string message)

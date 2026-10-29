@@ -1,11 +1,11 @@
 ﻿<Solution>
   <Project Path="Aayam.Editor.csproj" />
   <Project Path="Aayam.AR.csproj" />
+  <Project Path="Aayam.Models.csproj" />
   <Project Path="Aayam.Services.csproj" />
   <Project Path="Aayam.Tests.EditMode.csproj" />
   <Project Path="Aayam.Utilities.csproj" />
   <Project Path="Aayam.Tests.PlayMode.csproj" />
-  <Project Path="Aayam.Models.csproj" />
   <Project Path="Aayam.Core.csproj" />
   <Project Path="Aayam.UI.csproj" />
 </Solution>
