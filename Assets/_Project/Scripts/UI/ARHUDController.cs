@@ -40,6 +40,7 @@ namespace Aayam.UI
         [SerializeField] private ARSessionController        _sessionController;
         [SerializeField] private DoorCandidateDetector      _doorDetector;
         [SerializeField] private ObjectPlacementController  _placementController;
+        [SerializeField] private ProductComparisonController _comparisonController;
         [SerializeField] private CoachingOverlay            _coaching;
         [SerializeField] private ScreenshotCapture          _screenshot;
 
@@ -80,6 +81,19 @@ namespace Aayam.UI
         private void Update()
         {
             RefreshPlaceButton();
+            RefreshScanPrompt();
+        }
+
+        /// <summary>While actively placing, show a "pan your phone" countdown for
+        /// ObjectPlacementController's brief pre-tap scan window (see its own doc
+        /// comment), then hand off to the normal aiming prompt once it elapses.</summary>
+        private void RefreshScanPrompt()
+        {
+            if (!_isPlacingMode || _placementController == null) return;
+
+            UpdateStatus(_placementController.IsScanPromptActive
+                ? $"Move your phone slowly to scan the area… {Mathf.CeilToInt(_placementController.ScanSecondsRemaining)}"
+                : "Aim at door and tap to place");
         }
 
         // â”€â”€â”€ AR Event Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -166,8 +180,7 @@ namespace Aayam.UI
 
         private void OnCompareClicked()
         {
-            // Placeholder â€” Phase 6 (comparison view)
-            Debug.Log("[HUD] Compare clicked â€” not yet implemented.");
+            _comparisonController?.CycleCompare();
         }
 
         private void OnScreenshotClicked()
@@ -210,12 +223,17 @@ namespace Aayam.UI
         /// <summary>Called externally when a product has been selected and placement should start.
         /// anchorHeightMm is the product's standard mounting height from the floor (mm),
         /// or -1 if unknown - see DoorSurfacePlacer.SnapToStandardHeight.</summary>
-        public void BeginPlacementFor(GameObject prefab, string productId, float anchorHeightMm = -1f, string productCategory = "")
+        public void BeginPlacementFor(GameObject prefab, string productId, float anchorHeightMm = -1f,
+                                       string productCategory = "", Aayam.Models.MaterialVariantData[] materialVariants = null,
+                                       string displayName = "", string priceFormatted = "")
         {
-            _placementController?.StartPlacement(prefab, productId, anchorHeightMm, productCategory);
+            _placementController?.StartPlacement(prefab, productId, anchorHeightMm, productCategory,
+                                                  materialVariants, displayName, priceFormatted);
             _isPlacingMode = true;
             SetPlaceButtonLabel("Cancel");
-            UpdateStatus("Aim at door and tap to place");
+            // RefreshScanPrompt (called every Update while _isPlacingMode) takes
+            // over the status text from here - starts with the scan countdown.
+            UpdateStatus("Move your phone slowly to scan the area…");
             _screenManager?.ShowScreen(AppScreen.ARScan);
         }
     }

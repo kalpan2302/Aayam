@@ -4,6 +4,8 @@
     "references": [
         "Aayam.Core",
         "Aayam.Models",
+        "Aayam.Utilities",
+        "Aayam.AR",
         "Newtonsoft.Json",
         "glTFast"
     ],

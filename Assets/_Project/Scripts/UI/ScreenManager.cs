@@ -14,7 +14,10 @@ namespace Aayam.UI
         ProductDetail,   // Product info card
         QRScanner,       // Camera QR scan - decodes to a product, then -> ARScan
         Settings,
-        Debug
+        Debug,
+        SignIn,          // Fitora accounts (2026-11-04) - real backend auth
+        SignUp,
+        Profile,
     }
 
     // ─── Screen Manager ───────────────────────────────────────────

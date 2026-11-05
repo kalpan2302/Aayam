@@ -67,20 +67,43 @@ namespace Aayam.Services
 
             try
             {
-                // 1. Cache hit
+                // 1. Cache hit - but only trust it if the server's current file is
+                // still the one we cached. The cache previously had no invalidation
+                // at all (keyed only by productId) - confirmed live on-device:
+                // swapping a real model into backend storage kept serving the stale
+                // cached file indefinitely, only fixable by uninstalling the app.
+                // First attempt compared Content-Length, which is NOT reliable - two
+                // real GLBs differing only in a rotation-correction quaternion (not
+                // geometry/textures) landed on the exact same byte count after JSON
+                // padding, confirmed live on-device the very next iteration. ETag is
+                // content-derived (the backend's static file server - Starlette's
+                // StaticFiles - sends one by default) and doesn't have that
+                // collision. Falls back to trusting the cache if the HEAD request
+                // itself fails, or the server sends no ETag, or this entry predates
+                // ETag tracking (offline use, or an older cached entry, shouldn't be
+                // blocked by a reachability/version check).
                 if (_modelCache != null)
                 {
                     string cached = _modelCache.GetCachedPath(productId);
                     if (!string.IsNullOrEmpty(cached) && File.Exists(cached))
                     {
-                        Debug.Log($"[ModelLoader] Cache hit: {productId}");
-                        return await LoadFromPathAsync(cached, onProgress);
+                        string cachedETag = _modelCache.GetCachedETag(productId);
+                        (long remoteSize, string remoteETag) = await TryGetRemoteHeadInfoAsync(url);
+                        bool knownStale = remoteSize >= 0 && !string.IsNullOrEmpty(cachedETag) &&
+                                          !string.IsNullOrEmpty(remoteETag) && cachedETag != remoteETag;
+                        if (!knownStale)
+                        {
+                            Debug.Log($"[ModelLoader] Cache hit: {productId}");
+                            return await LoadFromPathAsync(cached, onProgress);
+                        }
+                        Debug.Log($"[ModelLoader] Cache stale for {productId} " +
+                                  $"(cachedETag={cachedETag}, remoteETag={remoteETag}) - re-downloading.");
                     }
                 }
 
                 // 2. Download
                 Debug.Log($"[ModelLoader] Downloading: {url}");
-                byte[] data = await DownloadBytesAsync(url, p => onProgress?.Invoke(p * 0.9f));
+                (byte[] data, string downloadedETag) = await DownloadBytesAsync(url, p => onProgress?.Invoke(p * 0.9f));
 
                 if (data == null || data.Length == 0)
                 {
@@ -88,8 +111,9 @@ namespace Aayam.Services
                     return null;
                 }
 
-                // 3. Cache to disk
-                _modelCache?.CacheModel(productId, data);
+                // 3. Cache to disk (ETag recorded now so the NEXT load can detect
+                // staleness without a full re-download - see the cache-hit comment above).
+                _modelCache?.CacheModel(productId, data, downloadedETag);
 
                 // 4. Instantiate from bytes
                 onProgress?.Invoke(0.9f);
@@ -135,7 +159,7 @@ namespace Aayam.Services
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             // Android: StreamingAssets is inside a JAR — use UnityWebRequest
-            byte[] data = await DownloadBytesAsync("file://" + fullPath, p => onProgress?.Invoke(p * 0.8f));
+            (byte[] data, _) = await DownloadBytesAsync("file://" + fullPath, p => onProgress?.Invoke(p * 0.8f));
             if (data == null) return null;
             var go = await InstantiateFromBytesAsync(data);
             onProgress?.Invoke(1f);
@@ -200,7 +224,35 @@ namespace Aayam.Services
 
         // ─── Network ──────────────────────────────────────────────
 
-        private async Task<byte[]> DownloadBytesAsync(string url, Action<float> onProgress)
+        /// <summary>Content-Length + ETag of url via HEAD request (size -1 and etag
+        /// null if unavailable - request failed, timed out, or headers missing) -
+        /// used to detect a stale cache without paying for a full download. Short
+        /// timeout: this gates every cache hit, so a slow/unreachable server should
+        /// fail fast and fall back to trusting the cache rather than stalling every
+        /// load.</summary>
+        private async Task<(long size, string etag)> TryGetRemoteHeadInfoAsync(string url)
+        {
+            try
+            {
+                using var req = UnityWebRequest.Head(url);
+                req.timeout = 5;
+                var op = req.SendWebRequest();
+                while (!op.isDone) await Task.Yield();
+
+                if (req.result != UnityWebRequest.Result.Success) return (-1L, null);
+
+                string contentLength = req.GetResponseHeader("Content-Length");
+                long size = long.TryParse(contentLength, out long parsed) ? parsed : -1L;
+                return (size, req.GetResponseHeader("ETag"));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ModelLoader] HEAD request failed for {url}: {ex.Message}");
+                return (-1L, null);
+            }
+        }
+
+        private async Task<(byte[] data, string etag)> DownloadBytesAsync(string url, Action<float> onProgress)
         {
             using var req = UnityWebRequest.Get(url);
             req.timeout = _downloadTimeoutSec;
@@ -215,10 +267,10 @@ namespace Aayam.Services
             if (req.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"[ModelLoader] Download error: {req.error}");
-                return null;
+                return (null, null);
             }
 
-            return req.downloadHandler.data;
+            return (req.downloadHandler.data, req.GetResponseHeader("ETag"));
         }
 
         // ─── Helpers ──────────────────────────────────────────────

@@ -1,11 +1,17 @@
 ﻿using System.Text;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Unity.Profiling;
 
 namespace Aayam.Utilities
 {
     public class PerformanceProfiler : MonoBehaviour
     {
+        // Phase 6 Step 9: GPU-side draw-call/batch counts via the low-level
+        // ProfilerRecorder API - works without URP/HDRP (confirmed), unlike
+        // the Frame Debugger or render-pipeline-specific stats.
+        private ProfilerRecorder _drawCallsRecorder;
+        private ProfilerRecorder _batchesRecorder;
         [Header("UI")]
         [SerializeField] private UnityEngine.UI.Text _displayText;
 
@@ -28,7 +34,20 @@ namespace Aayam.Utilities
 #if !UNITY_EDITOR && !DEVELOPMENT_BUILD
             _showOverlay = false;
 #endif
+            // _showOverlay only gated whether UpdateOverlay() ran, leaving
+            // the initial "collecting..." placeholder text permanently
+            // stuck on-screen in a release build - confirmed live on-device
+            // (Phase 6 layout pass). Hide the GameObject outright instead.
+            if (!_showOverlay && _displayText != null) _displayText.gameObject.SetActive(false);
             _sessionStartTime = Time.time;
+            _drawCallsRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count");
+            _batchesRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Batches Count");
+        }
+
+        private void OnDisable()
+        {
+            _drawCallsRecorder.Dispose();
+            _batchesRecorder.Dispose();
         }
 
         private void Update()
@@ -76,11 +95,16 @@ namespace Aayam.Utilities
             sb.AppendLine("<b>MEMORY</b>");
             sb.AppendLine($"Alloc: {allocatedMB}MB  Rsrv: {reservedMB}MB  Mono: {monoMB}MB");
             sb.AppendLine();
+            sb.AppendLine("<b>GPU</b>");
+            sb.AppendLine($"Draw Calls: {ReadRecorder(_drawCallsRecorder)}  Batches: {ReadRecorder(_batchesRecorder)}");
+            sb.AppendLine();
             sb.AppendLine($"Res: {Screen.width}x{Screen.height}  DPI: {Screen.dpi:F0}");
             sb.AppendLine($"Session: {(Time.time - _sessionStartTime):F0}s");
 
             _displayText.text = sb.ToString();
         }
+
+        private static long ReadRecorder(ProfilerRecorder recorder) => recorder.Valid ? recorder.LastValue : -1;
 
         private float Get1PercentLow()
         {
@@ -116,10 +140,12 @@ namespace Aayam.Utilities
             sb.AppendLine($"Max FPS:          {_maxFps:F1}");
             sb.AppendLine($"1% Low (ms):      {Get1PercentLow():F2}");
             sb.AppendLine($"Allocated Memory: {allocatedMB} MB");
+            sb.AppendLine($"Draw Calls:       {ReadRecorder(_drawCallsRecorder)}");
+            sb.AppendLine($"Batches:          {ReadRecorder(_batchesRecorder)}");
             sb.AppendLine();
             sb.AppendLine("=== BENCHMARK RESULTS ===");
-            sb.AppendLine($"FPS >= 55:     {(_minFps >= 55f ? "PASS" : "FAIL")}");
-            sb.AppendLine($"Memory < 400MB:{(allocatedMB < 400 ? "PASS" : "FAIL")}");
+            sb.AppendLine($"FPS >= {PerformanceThresholds.TargetFps:F0}:     {(PerformanceThresholds.FpsMeetsTarget(_minFps) ? "PASS" : "FAIL")}");
+            sb.AppendLine($"Memory < {PerformanceThresholds.MemoryBudgetMB}MB:{(PerformanceThresholds.MemoryWithinBudget(allocatedMB) ? "PASS" : "FAIL")}");
             sb.AppendLine($"1% Low < 25ms: {(Get1PercentLow() < 25f ? "PASS" : "FAIL")}");
 
             string path = System.IO.Path.Combine(Application.persistentDataPath, "PerfReport.txt");

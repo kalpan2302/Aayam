@@ -25,8 +25,11 @@ from app.models.measurement import (
     Door,
     DoorMeasurement,
 )
+from app.models.material_variant import ProductMaterialVariant
+from app.models.user import User
 
 __all__ = [
+    "User",
     "Base",
     "Brand",
     "Category",
@@ -43,4 +46,5 @@ __all__ = [
     "Device",
     "Door",
     "DoorMeasurement",
+    "ProductMaterialVariant",
 ]

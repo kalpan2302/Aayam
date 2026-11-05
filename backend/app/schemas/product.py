@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.common import PaginationMeta
+from app.schemas.material_variant import MaterialVariantResponse
 
 
 class ProductDimensionResponse(BaseModel):
@@ -105,6 +106,7 @@ class ProductDetail(BaseModel):
     compatibility: Optional[ProductCompatibilityResponse] = None
     images: list[ProductImageResponse] = []
     materials: list[ProductMaterialResponse] = []
+    material_variants: list[MaterialVariantResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 

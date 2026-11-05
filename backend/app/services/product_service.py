@@ -120,8 +120,17 @@ class ProductService:
             text("SELECT material_name, percentage FROM product_materials WHERE product_id = :pid"),
             {"pid": product_id},
         )).mappings().all()
+        material_variants = (await db.execute(
+            text(
+                "SELECT id, product_id, finish_name, display_order, base_color_hex, "
+                "metallic_factor, roughness_factor, model_url, thumbnail_url, is_default "
+                "FROM product_material_variants WHERE product_id = :pid ORDER BY display_order"
+            ),
+            {"pid": product_id},
+        )).mappings().all()
         data["images"] = [dict(r) for r in images]
         data["materials"] = [dict(r) for r in materials]
+        data["material_variants"] = [dict(r) for r in material_variants]
         return data
 
     @staticmethod

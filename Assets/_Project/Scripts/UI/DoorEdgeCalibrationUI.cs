@@ -140,8 +140,16 @@ namespace Aayam.UI
         private void LateUpdate()
         {
             if (_measurementLabel == null) return;
-            _measurementLabel.transform.rotation = Quaternion.LookRotation(
-                _measurementLabel.transform.position - _arCamera.transform.position);
+            // Y-axis-only billboard - a bare LookRotation(forward) with no
+            // up hint degenerates when forward is close to parallel with
+            // world-up (steep camera angle looking down at a door-height
+            // label), rendering the text sideways. Confirmed on a sibling
+            // label in ProductComparisonController; fixed the same way
+            // here for consistency before this one hits the same angle.
+            Vector3 toCamera = _measurementLabel.transform.position - _arCamera.transform.position;
+            toCamera.y = 0f;
+            if (toCamera.sqrMagnitude > 0.0001f)
+                _measurementLabel.transform.rotation = Quaternion.LookRotation(toCamera.normalized, Vector3.up);
         }
 
         private void HandleConfirmClicked()

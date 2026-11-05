@@ -26,6 +26,9 @@ namespace Aayam.Models
         // ─── 3D Asset ─────────────────────────────────────────────
         public ProductAsset Asset;
 
+        // ─── Selectable Finishes (Phase 6 Step 6) ─────────────────
+        public MaterialVariantData[] MaterialVariants;
+
         // ─── Display ──────────────────────────────────────────────
         public string Description;
         public string[] Features;

@@ -16,6 +16,14 @@ namespace Aayam.Services
         public long     SizeBytes;
         public string   CachedAtUtc;      // ISO-8601, avoid DateTime serialization issues
         public string   LastAccessedUtc;
+        // 2026-11-04: Content-Length alone isn't a reliable staleness check - two
+        // real GLBs differing only in a few rotation/scale floats (not geometry or
+        // textures) landed on the EXACT same byte count after JSON padding,
+        // confirmed live on-device (a re-upload with a corrected rotation kept
+        // serving the stale cached file). The backend's static file server already
+        // sends a real content-derived ETag (Starlette's StaticFiles default) -
+        // store it and compare that instead.
+        public string   ETag;
     }
 
     [Serializable]
@@ -90,7 +98,7 @@ namespace Aayam.Services
         /// Saves model bytes to disk and records it in the manifest.
         /// Runs LRU eviction first if needed.
         /// </summary>
-        public string CacheModel(string productId, byte[] data)
+        public string CacheModel(string productId, byte[] data, string etag = null)
         {
             if (data == null || data.Length == 0) return null;
 
@@ -119,6 +127,7 @@ namespace Aayam.Services
                 SizeBytes        = data.Length,
                 CachedAtUtc      = DateTime.UtcNow.ToString("o"),
                 LastAccessedUtc  = DateTime.UtcNow.ToString("o"),
+                ETag             = etag,
             });
 
             SaveManifest();
@@ -131,6 +140,25 @@ namespace Aayam.Services
         {
             var entry = FindEntry(productId);
             return entry != null && File.Exists(FilePath(entry.FileName));
+        }
+
+        /// <summary>Size in bytes of the cached entry for productId, or -1 if not cached.
+        /// Used by ModelLoader to detect a stale cache against the server's current
+        /// Content-Length before trusting a cache hit - see its own doc comment for why
+        /// (the cache previously had no invalidation at all, confirmed live on-device:
+        /// a real model swapped into backend storage kept serving the old cached file
+        /// indefinitely, only fixable by uninstalling the app).</summary>
+        public long GetCachedSizeBytes(string productId)
+        {
+            var entry = FindEntry(productId);
+            return entry?.SizeBytes ?? -1L;
+        }
+
+        /// <summary>ETag of the cached entry for productId, or null if not cached
+        /// or it was cached before ETag tracking existed.</summary>
+        public string GetCachedETag(string productId)
+        {
+            return FindEntry(productId)?.ETag;
         }
 
         /// <summary>Delete a single cached model.</summary>
