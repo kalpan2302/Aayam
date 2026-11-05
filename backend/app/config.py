@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_DIR: str = "storage"
     API_KEY: str = "dev-api-key-change-me"
     ADMIN_API_KEY: str = "dev-admin-key-change-me"
+    # 2026-11-04: Fitora user accounts (real backend auth, not a device/admin
+    # key). Dev default, same pattern as API_KEY/ADMIN_API_KEY above - change
+    # via .env before this is ever exposed beyond a personal dev machine.
+    JWT_SECRET: str = "dev-jwt-secret-change-me-before-any-real-deployment"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60 * 24 * 14  # 14 days - demo app, no refresh-token flow
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     APP_NAME: str = 'Aayam Product API'

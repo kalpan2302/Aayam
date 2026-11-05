@@ -6,8 +6,11 @@
         "Aayam.Models",
         "Aayam.AR",
         "Aayam.Services",
+        "Aayam.Utilities",
         "Unity.XR.ARFoundation",
-        "Unity.XR.ARSubsystems"
+        "Unity.XR.ARSubsystems",
+        "NativeGallery.Runtime",
+        "NativeShare.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

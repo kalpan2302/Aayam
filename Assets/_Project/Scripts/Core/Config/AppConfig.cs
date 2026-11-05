@@ -11,7 +11,12 @@ namespace Aayam.Core.Bootstrap
     {
         // ─── App Identity ─────────────────────────────────────────────
         public string AppVersion => Application.version;
-        public string AppName => "Aayam";
+        // 2026-11-04: visual rebrand to "Fitora" (see FitoraTheme/FitoraIcons) -
+        // app identity (bundle ID com.kalpan2302.aayam, project/repo name,
+        // backend package names) intentionally left as Aayam. Renaming those
+        // would force a fresh device install + developer-trust cycle for no
+        // visual benefit; only what the user actually sees changes here.
+        public string AppName => "Fitora";
         public string BundleId => Application.identifier;
 
         // ─── API Configuration ────────────────────────────────────────
@@ -23,8 +28,27 @@ namespace Aayam.Core.Bootstrap
         // device itself, not your laptop - use your laptop's LAN IP (e.g.
         // "http://192.168.1.23:8010") or a tunnel instead.
         [Header("API")]
-        public string ApiBaseUrl = "http://localhost:8010";
-        public string CdnBaseUrl = "http://localhost:8010";
+        // TEMP for this device-test pass only (2026-10-29, Phase 6) -
+        // localhost means the device itself on a physical phone. Revert
+        // to "http://localhost:8010" before committing.
+        // 2026-11-03: .102 was stale - this Mac's DHCP lease moved to .104
+        // sometime after 10-29, silently breaking the on-device backend
+        // fetch (ProductSelector swallows the failure and falls back to its
+        // 5-item LoadStubProducts() list - confirmed live on-device: the
+        // "only 5 products" the stub list's exact names matched, not the
+        // real 20-product catalog the backend actually serves).
+        // 2026-11-04: happened AGAIN one day later - .104 was already stale,
+        // moved to .103 (confirmed via `ipconfig getifaddr en0` + curl).
+        // Two DHCP changes in two days means hardcoding an IP here is not a
+        // durable fix - this machine's Bonjour hostname (`scutil --get
+        // LocalHostName` -> "hemutindia5") didn't resolve via curl from the
+        // Mac itself when tried, so ".local" isn't a proven alternative yet
+        // either. Real fix is a DHCP reservation/static IP for this Mac on
+        // the router (outside this app) so the address stops moving; until
+        // then, re-check with `ipconfig getifaddr en0` any time products
+        // silently fall back to the 5-item stub list again.
+        public string ApiBaseUrl = "http://192.168.0.103:8010";
+        public string CdnBaseUrl = "http://192.168.0.103:8010";
         public float ApiTimeout = 30f;
         // 2026-10-29, Phase 5: the backend's verify_api_key dependency
         // (app/api/deps.py) existed since before Phase 5 but no route

@@ -66,6 +66,17 @@ namespace Aayam.Services
     }
 
     [Serializable]
+    internal class MaterialVariantDto
+    {
+        [JsonProperty("finish_name")] public string FinishName;
+        [JsonProperty("base_color_hex")] public string BaseColorHex;
+        [JsonProperty("metallic_factor")] public string MetallicFactor;
+        [JsonProperty("roughness_factor")] public string RoughnessFactor;
+        [JsonProperty("model_url")] public string ModelUrl;
+        [JsonProperty("is_default")] public bool IsDefault;
+    }
+
+    [Serializable]
     internal class ProductDetailDto
     {
         [JsonProperty("sku")] public string Sku;
@@ -77,6 +88,7 @@ namespace Aayam.Services
         [JsonProperty("dimensions")] public ProductDimensionsDto Dimensions;
         [JsonProperty("asset_3d")] public ProductAsset3DDto Asset3D;
         [JsonProperty("compatibility")] public DoorCompatibilityDto Compatibility;
+        [JsonProperty("material_variants")] public List<MaterialVariantDto> MaterialVariants;
     }
 
     // ─── Result type for list queries ──────────────────────────────
@@ -125,10 +137,12 @@ namespace Aayam.Services
             return _cdnBaseUrl + relativeOrAbsoluteUrl;
         }
 
-        public async Task<List<ProductSummary>> FetchProductListAsync(int page = 1, int pageSize = 50)
+        public async Task<List<ProductSummary>> FetchProductListAsync(int page = 1, int pageSize = 50, string search = null)
         {
             var result = new List<ProductSummary>();
             string url = $"{_apiBaseUrl}/api/v1/products/?page={page}&page_size={pageSize}";
+            if (!string.IsNullOrWhiteSpace(search))
+                url += $"&search={UnityWebRequest.EscapeURL(search.Trim())}";
             string json = await GetStringAsync(url);
             if (json == null) return result;
 
@@ -228,6 +242,24 @@ namespace Aayam.Services
                         ZMm = ParseFloat(dto.Asset3D.AnchorZMm),
                     },
                 };
+            }
+
+            if (dto.MaterialVariants != null)
+            {
+                data.MaterialVariants = new MaterialVariantData[dto.MaterialVariants.Count];
+                for (int i = 0; i < dto.MaterialVariants.Count; i++)
+                {
+                    var v = dto.MaterialVariants[i];
+                    data.MaterialVariants[i] = new MaterialVariantData
+                    {
+                        FinishName = v.FinishName,
+                        BaseColorHex = v.BaseColorHex,
+                        MetallicFactor = ParseFloat(v.MetallicFactor),
+                        RoughnessFactor = ParseFloat(v.RoughnessFactor),
+                        ModelUrl = string.IsNullOrEmpty(v.ModelUrl) ? null : ResolveAssetUrl(v.ModelUrl),
+                        IsDefault = v.IsDefault,
+                    };
+                }
             }
 
             return data;

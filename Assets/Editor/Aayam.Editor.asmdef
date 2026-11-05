@@ -7,6 +7,7 @@
         "Aayam.Models",
         "Aayam.Services",
         "Aayam.UI",
+        "Aayam.Utilities",
         "Unity.XR.ARFoundation",
         "Unity.XR.ARSubsystems",
         "Unity.XR.CoreUtils",

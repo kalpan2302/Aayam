@@ -43,7 +43,8 @@ namespace Aayam.AR.Interaction
             _selector.OnObjectSelected += obj =>
             {
                 _activeObject    = obj;
-                _realWorldScale  = obj.localScale;    // Assume the prefab is set to real-world scale
+                _realWorldScale  = obj.localScale;    // Correct by now - ModelInstanceManager.SetupModelForAR applies
+                                                       // the catalog-dimension scale correction before placement (Phase 6 Step 1)
             };
             _selector.OnObjectDeselected += () => _activeObject = null;
             _gestures.OnPinch += HandlePinch;

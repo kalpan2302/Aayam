@@ -87,6 +87,7 @@ class Product(Base):
     price_history = relationship("ProductPriceHistory", back_populates="product", cascade="all, delete-orphan")
     attributes = relationship("ProductAttribute", back_populates="product", cascade="all, delete-orphan")
     tags = relationship("ProductTag", back_populates="product", cascade="all, delete-orphan")
+    material_variants = relationship("ProductMaterialVariant", back_populates="product", cascade="all, delete-orphan")
 
 
 class ProductDimension(Base):

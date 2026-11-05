@@ -94,39 +94,56 @@ namespace Aayam.UI
 
         private async void Start()
         {
+            List<ProductUIItem> items = await FetchItemsAsync(search: null);
+            if (items != null) Populate(items);
+            else LoadStubProducts();
+        }
+
+        /// <summary>Fitora search bar (2026-11-04) - re-fetches from the
+        /// backend's own ?search= filter (app/api/v1/products.py) and
+        /// replaces the current grid. An empty/whitespace query clears back
+        /// to the full catalog, not an empty result.</summary>
+        public async void SearchAsync(string query)
+        {
+            List<ProductUIItem> items = await FetchItemsAsync(string.IsNullOrWhiteSpace(query) ? null : query);
+            if (items != null) Populate(items);
+            // A failed search re-fetch leaves the current grid as-is rather
+            // than falling back to stub data - stubs are only Start()'s
+            // "backend might not be running yet" safety net.
+        }
+
+        private async Task<List<ProductUIItem>> FetchItemsAsync(string search)
+        {
             // Try the real backend first; fall back to stub data (e.g. the
             // backend isn't running, or this is a pure UI-in-Editor test) so
             // the screen is never left empty.
-            List<ProductUIItem> items = null;
             try
             {
-                var summaries = await _apiService.FetchProductListAsync();
-                if (summaries.Count > 0)
+                var summaries = await _apiService.FetchProductListAsync(search: search);
+                if (summaries.Count == 0) return search != null ? new List<ProductUIItem>() : null;
+
+                var items = new List<ProductUIItem>();
+                foreach (var s in summaries)
                 {
-                    items = new List<ProductUIItem>();
-                    foreach (var s in summaries)
+                    items.Add(new ProductUIItem
                     {
-                        items.Add(new ProductUIItem
-                        {
-                            ProductId          = s.Sku,
-                            Sku                 = s.Sku,
-                            Name                = s.Name,
-                            Brand               = s.BrandName,
-                            Category            = s.CategoryName,
-                            PriceFormatted      = FormatPrice(s.Price, s.Currency),
-                            CompatibilityLabel  = s.Has3DModel ? "" : "No 3D model yet",
-                            CompatibilityColor  = s.Has3DModel ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.6f, 0.2f),
-                        });
-                    }
+                        ProductId          = s.Sku,
+                        Sku                 = s.Sku,
+                        Name                = s.Name,
+                        Brand               = s.BrandName,
+                        Category            = s.CategoryName,
+                        PriceFormatted      = FormatPrice(s.Price, s.Currency),
+                        CompatibilityLabel  = s.Has3DModel ? "" : "No 3D model yet",
+                        CompatibilityColor  = s.Has3DModel ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.6f, 0.2f),
+                    });
                 }
+                return items;
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[ProductSelector] Backend fetch failed, using stub data: {ex.Message}");
+                Debug.LogWarning($"[ProductSelector] Backend fetch failed: {ex.Message}");
+                return null;
             }
-
-            if (items != null) Populate(items);
-            else LoadStubProducts();
         }
 
         private static string FormatPrice(float price, string currency)
@@ -238,13 +255,17 @@ namespace Aayam.UI
                 return;
             }
 
-            _modelInstanceManager?.SetupModelForAR(instance, detail.Category);
+            _modelInstanceManager?.SetupModelForAR(instance, detail.Category, detail.Dimensions);
             // ExecutePlacement (ObjectPlacementController) instantiates a clone of
             // this at placement time - hide the loaded template until then.
             instance.SetActive(false);
 
             float anchorYMm = detail.Asset.Anchor?.YMm ?? -1f;
-            _hud?.BeginPlacementFor(instance, sku, anchorYMm, categoryOverride);
+            // detail.Name/Price cover both entry points (card selection AND
+            // QR scan) uniformly - simpler than threading ProductUIItem
+            // through, which SelectProductBySku's QR path never has one of.
+            _hud?.BeginPlacementFor(instance, sku, anchorYMm, categoryOverride, detail.MaterialVariants,
+                                     detail.Name, FormatPrice(detail.Price, detail.Currency));
         }
 
         // â”€â”€â”€ Stub Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -21,6 +21,13 @@ namespace Aayam.UI
 
         private void Awake()
         {
+            // Phase 6: dev-only diagnostic clutter, hidden for a real demo -
+            // same gate as AppConfig's own DebugMode-dependent fields.
+            if (!Aayam.Core.Bootstrap.AppConfig.Load().DebugMode)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
             _label = GetComponent<Text>();
         }
 

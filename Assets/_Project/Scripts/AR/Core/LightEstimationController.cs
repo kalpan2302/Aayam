@@ -32,6 +32,18 @@ namespace Aayam.AR.Core
         {
             _cameraManager = GetComponent<ARCameraManager>();
 
+            // This component reads args.lightEstimation every frame but
+            // ARKit/ARCore never actually compute any of it unless asked -
+            // requestedLightEstimation defaults to LightEstimation.None, so
+            // every field below was always HasValue == false. Confirmed via
+            // the ARSession config log: "lightEstimation=Disabled". Request
+            // exactly the fields this controller reads.
+            _cameraManager.requestedLightEstimation =
+                LightEstimation.AmbientIntensity |
+                LightEstimation.AmbientColor |
+                LightEstimation.MainLightDirection |
+                LightEstimation.MainLightIntensity;
+
             // Auto-find directional light if not assigned
             if (_directionalLight == null)
             {

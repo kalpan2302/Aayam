@@ -71,12 +71,16 @@ namespace Aayam.AR.Placement
             }
         }
 
-        public void Undo()
+        // async void implementing a void interface method is valid C# -
+        // matches this project's fire-and-forget convention for a sync
+        // call site (IPlacementCommand.Undo() can't be awaited by its
+        // caller either way).
+        public async void Undo()
         {
             // Re-anchor at original position
             if (_product.Instance != null && _anchors != null)
             {
-                var anchor = _anchors.CreateAnchor(_originalPose);
+                var anchor = await _anchors.CreateAnchorAsync(_originalPose);
                 if (anchor != null)
                 {
                     _anchors.AttachObjectToAnchor(_product.Instance, anchor);

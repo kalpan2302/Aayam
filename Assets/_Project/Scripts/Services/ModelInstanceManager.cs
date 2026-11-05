@@ -1,4 +1,6 @@
 using UnityEngine;
+using Aayam.AR.Core;
+using Aayam.Models;
 
 namespace Aayam.Services
 {
@@ -23,14 +25,39 @@ namespace Aayam.Services
         [Tooltip("If true, the model root is offset so the anchor point (origin) sits on the door surface.")]
         [SerializeField] private bool _applyAnchorOffset = true;
 
+        [Header("Shadows & LOD (Phase 6)")]
+        [Tooltip("Optional - gates real-time shadows/LOD setup by device tier. Shadows off entirely on Low-tier devices for perf.")]
+        [SerializeField] private DeviceCapabilityChecker _capabilityChecker;
+        [Tooltip("Optional - sets up an LODGroup when the model has *_LOD0/_LOD1/_LOD2 meshes or glTFast's MSFT_lod. No-op otherwise.")]
+        [SerializeField] private LODSetup _lodSetup;
+
         // ─── Public API ───────────────────────────────────────────
 
         /// <summary>
         /// Full AR setup for an instantiated model. Call once after ModelLoader returns.
+        /// Pass the product's catalog dimensions so the model is corrected to its
+        /// real-world size (Phase 6 Step 1) before collider/anchor steps run -
+        /// both depend on final bounds.
         /// </summary>
-        public void SetupModelForAR(GameObject modelRoot, string productCategory = "")
+        public void SetupModelForAR(GameObject modelRoot, string productCategory = "", ProductDimensions dimensions = null)
         {
             if (modelRoot == null) return;
+
+            // 0. Scale correction (must run first - everything below reads bounds)
+            if (ProductScaleCalculator.TryComputeScaleFactor(modelRoot, dimensions, out Vector3 scaleFactor, out string reason))
+            {
+                modelRoot.transform.localScale = Vector3.Scale(modelRoot.transform.localScale, scaleFactor);
+            }
+            else if (reason != null)
+            {
+                Debug.Log($"[ModelInstance] No scale correction applied to '{modelRoot.name}': {reason}");
+            }
+
+            // 0b. LOD setup (Phase 6 Step 9) - a no-op today, since the
+            // placeholder GLBs have no *_LOD0/_LOD1/_LOD2 meshes or
+            // MSFT_lod extension, but wired now so it's live the moment a
+            // real LOD-authored asset exists.
+            _lodSetup?.SetupLODs(modelRoot);
 
             // 1. Layer
             SetLayerRecursive(modelRoot, _arInteractableLayer);
@@ -50,7 +77,10 @@ namespace Aayam.Services
             if (_applyAnchorOffset)
                 CenterOnBoundsOrigin(modelRoot);
 
-            // 5. Debug bounds log
+            // 5. Shadows/LOD, gated by device tier (Phase 6 Step 4/9)
+            ApplyShadowAndLodPolicy(modelRoot);
+
+            // 6. Debug bounds log
             Bounds b = CalculateBounds(modelRoot);
             Debug.Log($"[ModelInstance] Setup complete '{modelRoot.name}' | Bounds: {b.size:F3} m");
         }
@@ -72,6 +102,34 @@ namespace Aayam.Services
         }
 
         // ─── Private Helpers ──────────────────────────────────────
+
+        /// <summary>
+        /// Phase 6 Step 4 (shadows) + Step 9 (LOD): Low-tier devices get
+        /// LODSetup.OptimizeRenderers's perf-first treatment (shadows off,
+        /// GPU instancing on); everything else gets real shadows enabled.
+        /// Defaults to "shadows on" when no DeviceCapabilityChecker is
+        /// wired (matches this method's own tier-unknown fallback).
+        /// </summary>
+        private void ApplyShadowAndLodPolicy(GameObject modelRoot)
+        {
+            DeviceQualityTier tier = _capabilityChecker != null ? _capabilityChecker.QualityTier : DeviceQualityTier.Medium;
+
+            if (!ShadowPolicy.ShouldCastShadows(tier))
+            {
+                Debug.Log($"[ShadowDiag] tier={tier} - shadows disabled, using LODSetup.OptimizeRenderers.");
+                LODSetup.OptimizeRenderers(modelRoot);
+                return;
+            }
+
+            int count = 0;
+            foreach (var r in modelRoot.GetComponentsInChildren<Renderer>())
+            {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                r.receiveShadows    = true;
+                count++;
+            }
+            Debug.Log($"[ShadowDiag] tier={tier} - enabled shadowCastingMode=On on {count} renderer(s) under '{modelRoot.name}'.");
+        }
 
         private void SetLayerRecursive(GameObject obj, int layer)
         {
